@@ -159,7 +159,7 @@ export function launchExhaust(rocket,port,atlas){
     return pivot?[{pivot,level,closed:pivot.quaternion.clone()}]:[];
   });
   const up=new THREE.Vector3(0,1,0),turn=new THREE.Quaternion();
-  const passenger=port.getObjectByName('Figure / scientist');
+  const passenger=port.getObjectByName('宁宁登船');
   function reset(){
     if(passenger)passenger.visible=true;
     jets.visible=cloud.mesh.visible=false;cloud.mesh.geometry.instanceCount=0;lamp.intensity=0;

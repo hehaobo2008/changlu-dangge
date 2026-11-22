@@ -4,7 +4,7 @@ import path from 'node:path';
 import http from 'node:http';
 import {fileURLToPath,pathToFileURL} from 'node:url';
 import {chromium} from 'playwright';
-import {letters,endingText,familyNote} from '../src/letters.js';
+import {letters,endingText} from '../src/letters.js';
 import {travelTime,progressAtTime,crossings,hermite} from '../src/journey.js';
 
 const root=path.resolve(path.dirname(fileURLToPath(import.meta.url)),'..'),dist=path.join(root,'dist');
@@ -35,7 +35,7 @@ async function open(options={},url=base+'/'){
   await p.waitForFunction(()=>getComputedStyle(document.querySelector('#loading')).visibility==='hidden');
   await p.evaluate(()=>__changlu.freeze());
   await mode(p,'prologue');
-
+  await p.locator('#skipIntro').click();await p.locator('#homeBtn').click();
   return p;
 }
 async function step(p,seconds){await p.evaluate(seconds=>{const a=__changlu;let left=seconds;while(left>1e-8){const dt=Math.min(1/60,left);a.step(dt);left-=dt}a.render()},seconds)}
@@ -43,7 +43,7 @@ async function place(p,progress){await p.evaluate(t=>{__changlu.setProgress(t);_
 async function shot(p,name){await p.evaluate(()=>__changlu.render());await p.waitForTimeout(750);await p.screenshot({path:path.join(out,name+'.png')})}
 async function start(p){
   const touch=await p.evaluate(()=>matchMedia('(pointer:coarse)').matches);
-  await p.locator('#skipIntro')[touch?'tap':'click']();
+  await p.locator('#startBtn')[touch?'tap':'click']();await p.locator('#skipIntro')[touch?'tap':'click']();
   await step(p,.01);await mode(p,'travel');
 }
 async function close(p){await p.context().close()}
@@ -54,43 +54,49 @@ async function fits(p,selector,name){
   await p.waitForTimeout(750); // Measure the settled face, after its CSS flip/size transition.
   check(await p.locator(selector).evaluate(n=>{const r=n.getBoundingClientRect();return r.width>0&&r.height>0&&r.left>=-1&&r.right<=innerWidth+1&&r.top>=-1&&r.bottom<=innerHeight+1}),name+' fits viewport');
 }
-async function lastSpread(p){
-  await p.locator('#closeEarth').click();await p.waitForFunction(()=>__changlu.state.mode==='codex');
-  await p.locator('#bookmarks button:last-child').click();
-}
 async function replay(p){
-  await lastSpread(p);await p.getByRole('button',{name:'再走一程',exact:true}).click();await mode(p,'prologue');
-  check(await p.evaluate(()=>__changlu.state.replyDraft===(JSON.parse(localStorage.getItem('shanhe.yisui.v1'))?.wish||'')&&!__changlu.camera.view?.enabled),'Replay restores saved writing and framing');
+  await p.locator('#againBtn').click();await mode(p,'prologue');
+  check(await p.evaluate(()=>__changlu.state.replyDraft===(JSON.parse(localStorage.getItem('shanhe.knocks'))?.wish||'')&&!__changlu.scene.getObjectByName('Five lights on the way home')&&!__changlu.camera.view?.enabled),'Replay restores saved writing and resets lights and framing');
   await p.locator('#skipIntro').click();await step(p,.01);
 }
 async function ending(p,message){
-  check(await p.locator('#earthTitle').innerText()===familyNote&&await p.locator('#earthLine').innerText()===endingText,'Earth shows both final lines');
-  await lastSpread(p);
-  check(await p.locator('.home-line').count()===5,'All five letters appear in the final folio');
-  if(message)check(await p.locator('#folioContent blockquote').innerText()===message,'Visitor inscription survives rewind');
-  else check(await p.locator('#folioContent blockquote').count()===0,'Blank message stays blank');
-  await p.locator('#closeCodex').click();await mode(p,'ended');
+  check(await p.locator('#earthTitle').innerText()===letters[0].backText,'Earth ending uses the chosen final line');
+  check(await p.locator('#endCard').getAttribute('data-ending')==='earth','Ending keeps the live Earth visible');
+  await p.locator('#endRecord summary').click();
+  check(await p.locator('#endAnswer').innerText()===endingText,'Journey record preserves the third-person story');
+  if(message)check(await p.locator('#endWish').innerText()===message&&await p.locator('#endRecipient').innerText()==='旅途留言','Visitor text stays a separate inscription');
+  else check(await p.locator('#endReply').isHidden(),'Blank message stays blank');
+  check(await p.locator('#endTickets .home-ticket').count()===5,'All five paper objects remain in the journey record');
+  await fits(p,'.end-record-panel','Journey record');
+  await p.locator('#endRecord summary').click();
 }
 async function opening(p){
-  await mode(p,'prologue');await step(p,12);
-  check(await p.locator('#prologue').getAttribute('data-phase')==='cover','Closed book waits for a gesture');
-  await p.locator('#openFolio').click();await step(p,1.15);await shot(p,'opening-1');
-  check(await p.locator('#prologue').getAttribute('data-phase')==='background','First spread waits for a turn');
-  await p.locator('#openFolio').click();await step(p,1.15);await shot(p,'opening-2');
-  check(await p.locator('#bookPicture').evaluate(n=>{const gl=document.querySelector('#gl');return n.width===gl.width&&n.height===gl.height&&n.getContext('2d').getImageData(n.width>>1,n.height>>1,1,1).data.some((v,i)=>i<3&&v>30); }),'First plate contains the full-resolution live frame');
-  const pose=await p.evaluate(()=>__changlu.camera.matrixWorld.toArray());await step(p,4.1);await mode(p,'travel');
+  await p.locator('#startBtn').click();await mode(p,'prologue');
+  await advanceWheel(p,900);await step(p,1.6);
+  check((await p.locator('#introWords').innerText()).includes('外婆留下的旧册子'),'Opening introduction names the old album');
+  check(await p.evaluate(()=>Object.values(__changlu.info().visible).filter(Boolean).length===1),'Only the first scene is drawn inside the book');
+  await shot(p,'opening-1');await step(p,3.2);
+  check(await p.locator('#prologue').getAttribute('data-phase')==='cover','Closed cover precedes the first plate');
+  await step(p,3);await shot(p,'opening-2');
+  check(await p.locator('#bookPicture').evaluate(n=>{
+    const gl=document.querySelector('#gl');
+    return n.width===gl.width && n.height===gl.height && n.getContext('2d').getImageData(n.width>>1,n.height>>1,1,1).data.some((v,i)=>i<3&&v>30);
+  }),'First plate contains the rendered travel frame at full resolution');
+  await step(p,3.16);
+  const plate=await p.locator('#bookWindow').boundingBox(),viewport=p.viewportSize();
+  check(Math.abs(plate.x)<1&&Math.abs(plate.y)<1&&Math.abs(plate.width-viewport.width)<1&&Math.abs(plate.height-viewport.height)<1,'First painting precisely fills the viewport before the handoff');
+  const pose=await p.evaluate(()=>__changlu.camera.matrixWorld.toArray());
+  await step(p,.05);await mode(p,'travel');
   const after=await p.evaluate(()=>__changlu.camera.matrixWorld.toArray());
-  check(pose.every((v,i)=>Math.abs(v-after[i])<.001),'The printed view and live camera match');
-  await p.keyboard.press('Space');check(await p.evaluate(()=>__changlu.state.target>__changlu.state.progress),'Space advances after the introduction');
-}
-async function openMap(p,touch=false){
-  await start(p);
-  if(await p.locator('#moreBtn').isVisible()){await p.locator('#moreBtn').click();await p.locator('[data-tool=overviewBtn]').click();}
-  else await p.locator('#overviewBtn')[touch?'tap':'click']();
+  check(pose.every((n,i)=>Math.abs(n-after[i])<.001),'Travel begins from the same camera pose');
+  check(await p.evaluate(()=>Math.abs(__changlu.state.progress-.1)<1e-6&&document.querySelector('#world').parentNode.id==='app'),'Book fills the frame and releases its live camera');
+  await p.keyboard.press('Space');
+  check(await p.evaluate(()=>__changlu.state.mode==='travel'&&__changlu.state.target>__changlu.state.progress),'Space advances immediately after the introduction');
+  check(await p.locator('#walkBtn,#bookScrim,#arrivalBookmark,#finale').count()===0,'No walk controller, bookmark or extra finale popup');
 }
 async function islandMap(p){
   const original=p.viewportSize();
-  await openMap(p);
+  await p.locator('#landingOverviewBtn').click();
   for(const [width,height] of [[1280,760],[768,1024],[390,844],[320,568],[844,390],[568,320]]){
     await p.setViewportSize({width,height});
     await p.waitForFunction(([w,h])=>__changlu.camera.aspect===w/h,[width,height]);
@@ -200,7 +206,7 @@ async function arrivals(p){
       check(await p.locator('#wishInput').inputValue()==='等星河归来，再聚一桌。','Draft survives archive navigation');
       check(await p.evaluate(()=>__changlu.state.collected.size)===5,'All five tickets read');
       await p.locator('#skipFinale').click();await mode(p,'ended');await ending(p,'等星河归来，再聚一桌。');
-      await lastSpread(p);check((await p.locator('.home-line').first().innerText()).includes('已留住'),'Kept quote remains marked');await p.locator('#closeCodex').click();
+      check(await p.locator('#endQuote').textContent()===letters[0].excerpt,'Kept quote remains separate');
     }
   }
   await replay(p);await p.locator('#autoBtn').click();await step(p,30);
@@ -209,10 +215,11 @@ async function arrivals(p){
   check(await p.evaluate(()=>__changlu.state.auto&&!__changlu.state.glideSpeed),'Continue resumes autoplay from rest');
   await step(p,1);check(await p.evaluate(()=>__changlu.state.progress)>.128,'Autoplay proceeds after reading');
   await advanceWheel(p,201);await step(p,.15);
-  const beforeBook=await p.evaluate(()=>__changlu.state.progress);await p.locator('#memoryBtn').click();
-  await step(p,1.8);check(await p.evaluate(()=>__changlu.state.progress)===beforeBook,'Opening the folio preserves the return position');
-  await p.locator('.folio-object').focus();await p.keyboard.press('Enter');
-  check(await p.locator('.folio-object').getAttribute('aria-pressed')==='true','Keyboard flips the archived object');
+  const incoming=await p.evaluate(()=>__changlu.state.metreSpeed);await p.locator('#memoryBtn').click();
+  const speeds=await p.evaluate(()=>{const out=[];for(let i=0;i<110;i++){__changlu.step(1/60);out.push(__changlu.state.metreSpeed)}return out});
+  check(speeds[0]>incoming*.9&&speeds.every((v,i)=>i===0||v<=speeds[i-1]+1e-6)&&Math.abs(speeds.at(-1))<1e-6,'Manual archive opening still brakes smoothly');
+  await p.locator('#ticketFront').focus();await p.keyboard.press('Enter');
+  check(await p.locator('#ticketLayer').getAttribute('data-side')==='back','Keyboard flips archive ticket');
   await p.keyboard.press('Escape');check(await p.locator('#memoryBtn').evaluate(n=>n===document.activeElement),'Archive restores focus');
   await p.evaluate(()=>__changlu.automaticLetters(false));const movement=[];
   for(const at of [.13,.34,.555,.775,.945]){
@@ -316,7 +323,7 @@ async function fullFlight(p,name='desktop'){
   check(await p.locator('#earthTitle').evaluate(n=>+getComputedStyle(n).opacity)>.99,'Final line fades in after the pullback');
   await shot(p,name+'-earth');metrics[name+'Flight']={samples};
   await step(p,2.1);await mode(p,'ended');await ending(p,await p.evaluate(()=>__changlu.state.replyDraft));await shot(p,name+'-ending');
-  await lastSpread(p);await p.getByRole('button',{name:'五岛展卷',exact:true}).click();await step(p,.1);
+  await p.locator('#endOverviewBtn').click();await step(p,.1);
   check(await p.evaluate(()=>__changlu.scene.visible&&!__changlu.ending.active),'Overview restores the miniature world and releases cinematic control');
   check(await p.evaluate(rest=>{
     const port=__changlu.zones.future.group,pad=port.getObjectByName('Pad ignition');
@@ -329,13 +336,13 @@ async function fullFlight(p,name='desktop'){
   },closed),'Returning to the map closes both bridges and clears the launch effects');
   await p.locator('#ovBack').click();await mode(p,'ended');
   check(await p.evaluate(()=>__changlu.ending.inOrbit&&!__changlu.scene.visible),'Returning from overview restores the final Earth view');
-  check(await p.locator('#closeEarth').isEnabled(),'Returning from overview leaves ending usable');
+  check(await p.locator('#againBtn').evaluate(n=>!n.closest('[inert]')),'Returning from overview leaves ending usable');
   await replay(p);
   check(await p.evaluate(()=>__changlu.scene.visible&&!__changlu.ending.active&&__changlu.sky.mat.uniforms.upperAtmosphere.value===0),'Replay restores the original sky and world');
 }
 async function mobile(p,name,{touch=false,flight=false}={}){
   if(touch){
-    await openMap(p,true);await step(p,.3);
+    await p.locator('#landingOverviewBtn').tap();await step(p,.3);
     const point=await p.evaluate(()=>{
       const a=__changlu,v=a.camera.position.clone().set(40,0,a.zones.town.spec.center).project(a.camera);
       return {x:(v.x+1)*innerWidth/2,y:(1-v.y)*innerHeight/2};
@@ -355,7 +362,7 @@ async function mobile(p,name,{touch=false,flight=false}={}){
     await p.evaluate(()=>new Promise(done=>requestAnimationFrame(()=>requestAnimationFrame(done))));
     await step(p,1);await p.waitForTimeout(550);
     check(await p.evaluate(()=>__changlu.state.progress>.128&&!__changlu.state.modal&&document.querySelector('#ticketLayer').dataset.side==='front'),'A fresh upward swipe continues without accidentally flipping the ticket');
-    await p.locator('#memoryBtn').tap();await p.locator('.folio-object').tap();await p.locator('#closeCodex').tap();await p.evaluate(()=>__changlu.receiveLetter());await step(p,1.8);await p.waitForTimeout(550);
+    await p.locator('#memoryBtn').tap();await step(p,1.8);await p.waitForTimeout(550);
   }
   await p.locator('#ticketFront').tap();await p.waitForTimeout(750);await fits(p,'#ticketLayer',name+' back');
   check(await p.locator('#ticketLayer').getAttribute('data-side')==='back'&&await p.locator('#ticketFront').getAttribute('aria-hidden')==='true'&&await p.evaluate(()=>__changlu.state.modal?.id)==='ticketLayer'&&await p.locator('#cardTitle').innerText()===letters[0].backText,name+' touch flips directly to prose');
@@ -370,7 +377,7 @@ async function mobile(p,name,{touch=false,flight=false}={}){
       for(const offset of [16,42,70,100])await driver.send('Input.dispatchTouchEvent',{type:'touchMove',touchPoints:[{x,y:y-offset}]});
       await driver.send('Input.dispatchTouchEvent',{type:'touchEnd',touchPoints:[]});await p.waitForTimeout(80);await step(p,1);
       check(await p.evaluate(()=>!__changlu.state.modal&&__changlu.state.progress>.342),'Fresh upward swipe continues without a button or accidental flip');
-      await p.waitForTimeout(600);await p.locator('#memoryBtn').tap();await p.locator('.folio-object').tap();await p.locator('#closeCodex').tap();await p.evaluate(()=>__changlu.receiveLetter());await step(p,1.8);
+      await p.waitForTimeout(600);await p.locator('#memoryBtn').tap();await step(p,1.8);
     }
     await p.locator('#ticketFront').tap();await fits(p,'#ticketLayer',name+' rail reverse '+idx);await p.locator('#cardClose').tap();
   }
@@ -389,7 +396,7 @@ async function mobile(p,name,{touch=false,flight=false}={}){
 }
 async function deployment(){
   const p=await open({viewport:{width:1280,height:800},reducedMotion:'reduce'},base+'/nested/');
-  await step(p,20);await mode(p,'prologue');
+  await p.locator('#startBtn').click();await step(p,20);await mode(p,'prologue');
   check(await p.locator('#skipIntro').innerText()==='进入长卷 →','Reduced motion offers a static readable introduction');
   await p.locator('#skipIntro').click();await place(p,1);await step(p,.6);
   await p.locator('#ticketFront').click();await p.locator('#wishInput').fill('归来仍有一盏灯');await p.locator('#launchBtn').click();

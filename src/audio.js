@@ -69,18 +69,15 @@ export class Soundscape {
     this.master = ctx.createGain();
     this.master.gain.value = this.on ? 0.2 : 0;
     this.master.connect(ctx.destination);
-    this.bedBus=ctx.createGain();this.bedBus.connect(this.master);
-    this.voiceBus=ctx.createGain();this.voiceBus.gain.value=this.on?.87:0;
-    this.voiceBus.connect(ctx.destination);
     // shared reverb
     this.reverb = ctx.createConvolver();
     this.reverb.buffer = impulse(ctx);
     const wet = ctx.createGain(); wet.gain.value = 0.3;
-    this.reverb.connect(wet); wet.connect(this.bedBus);
+    this.reverb.connect(wet); wet.connect(this.master);
     // music bus
     this.music = ctx.createGain(); this.music.gain.value = 0.5;
     const mLP = ctx.createBiquadFilter(); mLP.type = 'lowpass'; mLP.frequency.value = 1500; mLP.Q.value = 0.3;
-    this.music.connect(mLP); mLP.connect(this.bedBus);
+    this.music.connect(mLP); mLP.connect(this.master);
     const mSend = ctx.createGain(); mSend.gain.value = 0.35; mLP.connect(mSend); mSend.connect(this.reverb);
     // beds
     this.white = makeNoise(ctx, 4, false);
@@ -153,7 +150,7 @@ export class Soundscape {
     const ctx = this.ctx;
     const bus = ctx.createGain();
     bus.gain.value = immediate ? 1 : 0.0001;
-    bus.connect(this.bedBus);
+    bus.connect(this.master);
     this.amb = { gain: bus, sources: [], timers: [] };
     if (!immediate) bus.gain.setTargetAtTime(1, ctx.currentTime, 0.9);
 
@@ -310,24 +307,10 @@ export class Soundscape {
     tick();
   }
 
-  duck(on){
-    if(!this.ctx)return;
-    const gain=this.bedBus.gain,t=this.ctx.currentTime;
-    gain.cancelScheduledValues(t);gain.setTargetAtTime(on?.447:1,t,on?.07:.4);
-  }
-  pageTurn(delay=0){
-    if(!this.ctx||!this.on)return;
-    const t=this.ctx.currentTime+delay,source=this.ctx.createBufferSource(),filter=this.ctx.createBiquadFilter(),gain=this.ctx.createGain();
-    source.buffer=this.white;filter.type='bandpass';filter.frequency.setValueAtTime(1800,t);filter.frequency.exponentialRampToValueAtTime(750,t+.2);
-    gain.gain.setValueAtTime(.001,t);gain.gain.exponentialRampToValueAtTime(.38,t+.045);gain.gain.exponentialRampToValueAtTime(.001,t+.24);
-    source.connect(filter);filter.connect(gain);gain.connect(this.master);source.start(t);source.stop(t+.25);
-    source.onended=()=>{source.disconnect();filter.disconnect();gain.disconnect();};
-  }
   toggle() {
     this.on = !this.on;
     this.muted = !this.on;
     if (this.ctx) {
-      this.voiceBus.gain.setTargetAtTime(this.on?.87:0,this.ctx.currentTime,.045);
       this.master.gain.cancelScheduledValues(this.ctx.currentTime);
       this.master.gain.setTargetAtTime(this.on ? 0.2 : 0.0001, this.ctx.currentTime, 0.15);
     }

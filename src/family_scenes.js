@@ -1,16 +1,14 @@
 import * as THREE from 'three';
 
-import acts from './story.json' with { type:'json' };
-const points=[
-  [[-3.3,2.7,49],[7.1,1,20]], [[-4.98,3.8,-35],[-.85,1.1,-51.5]],
-  [[9.48,1.65,23.9],[1.2,15.5,-5]], [[-25,2,9.4],[-6.83,31.47,0]], [[127,8,-42],[102,25,-80]]
+// Landmarks use island-local coordinates. The second point is also the ticket pickup.
+export const scenes = [
+  {points:[[-3.3,2.7,49],[7.1,1,20]], action:'掀盖取字条',drag:'向上掀开锅盖',spots:['供销合作社','田埂上的稻子'],stories:['外婆用攒下的粮票换了半斤盐。走出供销社，熟悉的田埂一直通到家门口。','外婆每年都从田里挑出最饱满的一把谷子，留给来年。']},
+  {points:[[-4.98,3.8,-35],[-.85,1.1,-51.5]],action:'撕下副券',drag:'向右撕下副券',spots:['东街副食','车铃响过东街'],stories:['散场回家要经过东街副食。妈妈攥着两张票，停下来给我买了一块糖。','从东街骑到家有二十里，车把上挂着的饭盒一路轻轻响。']},
+  {points:[[9.48,1.65,23.9],[1.2,15.5,-5]],action:'在票边剪口',drag:'按下检票钳',spots:['雨里的红伞','高架上的绿皮车'],stories:['伞总往编织袋那边偏。我上车才发现，妈妈的半边袖子全湿了。','绿皮车从街上驶过。我隔着车窗望回去，寻找雨里那把红伞。']},
+  {reach:105,points:[[-25,2,9.4],[-6.83,31.47,0]],action:'刷证进站',drag:'把证件移过感应区',spots:['桥下的船','山河大桥'],stories:['外婆从前坐船过江。今天，我在火车上往下望，还能看见江面上小小的船影。','如今只消一顿饭的工夫，我就能从江的这一边赶回妈妈身边。']},
+  {reach:110,points:[[127,8,-42],[102,25,-80]],action:'扫描登船牌',drag:'让登船牌穿过光带',spots:['港口的温室','星河号'],stories:['从家乡带出来的稻种，终于在港口的温室里抽出了新叶。','我收好登船牌，抬头再看一眼星河号。三天以后，地球就成了窗外那盏灯。']}
 ];
-const actions=['展开折角','撕下副券','在票边剪口','刷证进站','扫描登船牌'];
-const gestures=['向上展开纸角','向右撕下副券','按下检票钳','把身份证移过感应区','让登船牌穿过扫描光带'];
-export const scenes=acts.map((a,i)=>({
-  points:points[i],reach:[42,42,42,105,110][i],action:actions[i],drag:gestures[i],
-  spots:a.details.map(d=>d.name),stories:a.details.map(d=>d.story),
-}));
+
 export function vesselMark(rocket){
   const c=document.createElement('canvas');c.width=180;c.height=700;
   const g=c.getContext('2d');g.textAlign='center';g.fillStyle='#973c32';

@@ -8,7 +8,6 @@
     "build:web": "node tools/build_h5.mjs",
     "prepare:web-bundle": "node tools/prepare_cloudflare.mjs",
     "test": "node tools/verify.mjs",
-    "test:folio": "node tools/verify_folio.mjs",
     "test:opening": "node tools/verify_opening_input.mjs",
     "audit:family": "node tools/verify_family.mjs && node tools/capture_family_scenes.mjs",
     "audit:scenery": "node tools/review_scenery.mjs && python tools/scenery_sheets.py && python tools/scenery_gallery.py",

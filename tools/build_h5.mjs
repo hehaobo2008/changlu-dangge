@@ -19,7 +19,7 @@ const copy = (rel) => {
   fs.copyFileSync(src, dst);
 };
 fs.copyFileSync(path.join(root,'src/index.html'), path.join(dist,'index.html'));
-fs.writeFileSync(path.join(dist,'style.css'),['style.css','folio.css'].map(n=>fs.readFileSync(path.join(root,'src',n),'utf8')).join('\n'));
+fs.copyFileSync(path.join(root,'src/style.css'), path.join(dist,'style.css'));
 const zones = ['rural','town','city','rail','future'];
 const vehicles = ['rickshaw','car','green_train','hsr','harmony','rocket','future_metro'];
 const textures = ['cloud.png','glow.png','star.png','smoke.png','shadow.png','grain.png','ink.png','seal.png'];
@@ -30,8 +30,6 @@ for(const family of ['mashanzheng','zcoolqingkehuangyou']){
 for (const f of zones) copy(`assets/zones/${f}.glb`);
 for (const f of vehicles) copy(`assets/vehicles/${f}.glb`);
 const plates=new Set([...scenePaintings,...detailPaintings].map(name=>name+'.webp'));
-for(const name of [...zones,'earth'])plates.add('folio-'+name+'.webp');
-for(const file of fs.readdirSync(path.join(root,'assets/audio/dialogue')))copy('assets/audio/dialogue/'+file);
 for (const f of plates) copy(`assets/painted/${f}`);
 // This build directory may still hold the scene additions from earlier local tests.
 for(const f of fs.readdirSync(path.join(dist,'assets','painted'))){

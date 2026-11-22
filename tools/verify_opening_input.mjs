@@ -51,23 +51,47 @@ for(const mobile of process.argv.includes('--mobile-only')?[true]:[false,true]){
     await page.waitForFunction(()=>window.__ready||window.__error,null,{timeout:150000});
     assert.equal(await page.evaluate(()=>window.__error),null);
     assert.equal(await page.evaluate(()=>window.ignoredEarlyWheel),true,'Loading input must leave the cover usable');
-    const started=Date.now();
+    await page.evaluate(touch=>{
+      const probe=window.openingInput={start:0,firstPaint:0,worst:0,gestures:[],phases:openingPhases};
+      window.addEventListener(touch?'pointerup':'wheel',e=>probe.gestures.push([Math.round(performance.now()),e.deltaY??e.pointerType,__changlu.state.mode]),{capture:true,passive:true});
+      window.addEventListener(touch?'pointerup':'wheel',()=>{
+        probe.start=performance.now();
+        let previous=probe.start;
+        function frame(){
+          const current=performance.now();
+          probe.worst=Math.max(probe.worst,current-previous);
+          previous=current;
+          if(!probe.firstPaint && __changlu.state.mode==='prologue' && __changlu.state.introTime>0)probe.firstPaint=current-probe.start;
+          if(current-probe.start<1700 || !probe.firstPaint)requestAnimationFrame(frame);
+          else probe.done=true;
+        }
+        requestAnimationFrame(frame);
+      },{capture:true,once:true,passive:true});
+    },mobile);
     if(mobile)await swipe(page);
     else for(let i=0;i<12;i++)await page.mouse.wheel(0,8);
-    await page.waitForFunction(()=>['opening','background'].includes(document.querySelector('#prologue').dataset.phase));
-    const result={gestureResponseMs:Date.now()-started};
-    assert(result.gestureResponseMs<2000,JSON.stringify(result));
-    await page.waitForFunction(()=>document.querySelector('#prologue').dataset.phase==='background');
-    assert.equal(await page.evaluate(()=>__changlu.state.mode),'prologue');
+    try{
+      await page.waitForFunction(()=>window.openingInput.done,null,{timeout:15000});
+    }catch(error){
+      console.error(JSON.stringify(await page.evaluate(()=>({mode:__changlu.state.mode,introTime:__changlu.state.introTime,hidden:document.hidden,wall:performance.now()-openingInput.start,probe:openingInput}))));
+      throw error;
+    }
+    const result=await page.evaluate(()=>{
+      const {firstPaint,worst}=openingInput,gl=__changlu.renderer.getContext();
+      const ext=gl.getExtension('WEBGL_debug_renderer_info');
+      return {firstFrameMs:Math.round(firstPaint),worstGapMs:Math.round(worst),
+        coverHidden:document.querySelector('#landing').classList.contains('hidden'),
+        gpu:ext?gl.getParameter(ext.UNMASKED_RENDERER_WEBGL):gl.getParameter(gl.RENDERER)};
+    });
+    assert(result.coverHidden && result.firstFrameMs<2000 && result.worstGapMs<2000,JSON.stringify(result));
     if(process.argv.includes('--natural')){
-      if(mobile)await swipe(page);else await page.keyboard.press('Space');
       await page.waitForFunction(()=>__changlu.state.mode==='travel',null,{timeout:45000});
-      const phases=await page.evaluate(()=>openingPhases);
+      const phases=await page.evaluate(()=>openingInput.phases);
       assert(phases.includes('cover')&&phases.includes('spread')&&phases.includes('enter'),JSON.stringify(phases));
     }else await page.locator('#skipIntro').click({timeout:3000});
     if(mobile)await swipe(page);else await page.mouse.wheel(0,120);
     await page.waitForFunction(()=>__changlu.state.mode==='travel'&&__changlu.state.progress>.1001,null,{timeout:3000});
-    if(mobile){await page.locator('#moreBtn').tap();await page.locator('[data-tool=infoBtn]').tap();}else await page.locator('#infoBtn').click({timeout:3000});
+    await page.locator('#infoBtn').click({timeout:3000});
     assert.equal(await page.locator('#infoBtn').getAttribute('aria-expanded'),'true');
     assert.deepEqual(errors,[]);
     console.log(mobile?'Touch':'Trackpad',JSON.stringify(result));

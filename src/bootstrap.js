@@ -1,4 +1,3 @@
-import { beginLoading } from './loading.js';
 let sceneStarted=false,busy=false;
 const loading=document.getElementById('loading');
 const screen=document.getElementById('errorScreen');
@@ -6,7 +5,7 @@ async function open(){
   if(busy)return;
   busy=true;window.__error=null;
   screen.classList.add('hidden');screen.inert=true;
-  loading.classList.remove('hidden');beginLoading();
+  loading.classList.remove('hidden');
   try{
     sceneStarted=true;
     await import('./main.js').then(module=>module.ready);

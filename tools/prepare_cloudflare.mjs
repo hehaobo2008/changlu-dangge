@@ -11,7 +11,6 @@ const files=[
   'index.html','style.css','app.js',
   ...['rural','town','city','rail','future'].map(n=>`assets/zones/${n}.glb`),
   ...['rickshaw','car','green_train','hsr','harmony','rocket','future_metro'].map(n=>`assets/vehicles/${n}.glb`),
-  ...fs.readdirSync(path.join(source,'assets','audio','dialogue')).map(n=>'assets/audio/dialogue/'+n),
   ...fs.readdirSync(path.join(source,'assets','painted')).map(n=>`assets/painted/${n}`),
   ...['cloud','glow','star','smoke','shadow','grain','ink','seal'].map(n=>`assets/textures/${n}.png`),
   ...['shanhe-titles.woff','mashanzheng-OFL.txt','zcoolqingkehuangyou-OFL.txt'].map(n=>`assets/fonts/${n}`),

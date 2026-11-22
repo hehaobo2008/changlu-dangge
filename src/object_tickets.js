@@ -7,7 +7,7 @@ function bars(x,y,width,height){
   return out;
 }
 export const objectRatios={note:330/470,ticket:290/650,boarding:340/780};
-export function objectTicket(kind,interactive=false){
+export function objectTicket(kind){
   if(kind==='note')return svg(470,330,`
     <defs><linearGradient id="note-paper" x2=".8" y2="1"><stop stop-color="#fff4d7"/><stop offset="1" stop-color="#e4cf9f"/></linearGradient></defs>
     <path d="M8 6L57 4 89 7 135 5 170 7 211 4 259 7 307 4 350 7 413 5 462 46 464 99 461 142 465 190 461 227 464 272 462 321 420 325 376 321 332 324 286 321 238 326 192 322 151 325 105 322 58 325 7 320 9 271 6 225 9 177 5 130 8 79Z" fill="url(#note-paper)"/>
@@ -15,11 +15,11 @@ export function objectTicket(kind,interactive=false){
     <path d="M231 7Q226 167 236 323" stroke="#b99d6c" opacity=".25"/><path d="M234 7Q229 167 239 323" stroke="#fff9e3" opacity=".7"/>
     <g stroke="#a99876" opacity=".2"><path d="M30 101L439 101M30 153L439 153M30 205L439 205M30 257L439 257"/></g>
     <g fill="#4c4d43" font-family="KaiTi,STKaiti,serif" transform="rotate(-2 220 156)">
-      <text x="42" y="78" font-size="22">给去县城念书的阿穗：</text>
-      <text x="60" y="145" font-size="29">最饱的谷留着做种。</text>
-      <text x="65" y="199" font-size="25">走出村口，秋熟记得回来。</text>
-      <text x="336" y="261" font-size="27">妈</text>
-      <text x="321" y="293" font-size="16" opacity=".72">一九八三 · 秋</text>
+      <text x="42" y="78" font-size="22">给放学的孩子：</text>
+      <text x="60" y="145" font-size="35">饭在灶上，</text>
+      <text x="65" y="199" font-size="35">早点回来吃饭。</text>
+      <text x="326" y="261" font-size="27">外婆</text>
+      <text x="321" y="293" font-size="16" opacity=".72">一九八三 · 夏</text>
     </g>
     <path d="M49 302Q35 291 45 276" stroke="#ac8356" stroke-width="3" opacity=".12"/>
   `);
@@ -31,8 +31,8 @@ export function objectTicket(kind,interactive=false){
     <g font-family="SimSun,serif" fill="#943e34">
       <text x="254" y="56" text-anchor="middle" font-size="30" letter-spacing="7">东街电影院</text>
       <path d="M46 72H462" stroke="#943e34"/>
-      <text x="254" y="112" text-anchor="middle" font-size="22" letter-spacing="9">《秋信》入场券</text>
-      <text x="54" y="155" font-size="20">一九九六年秋</text>
+      <text x="254" y="112" text-anchor="middle" font-size="22" letter-spacing="9">电影入场券</text>
+      <text x="54" y="155" font-size="20">一九九六年八月十六日</text>
       <text x="54" y="201" font-size="31">伍排　壹座</text>
       <text x="333" y="198" font-size="21">晚场 19:30</text>
       <path d="M46 221H462" stroke="#943e34" opacity=".6"/>
@@ -45,7 +45,6 @@ export function objectTicket(kind,interactive=false){
       <text x="567" y="210" text-anchor="middle" font-size="14">入场撕验</text>
       <text x="567" y="246" text-anchor="middle" font-family="Courier New,monospace" font-size="16">No.018639</text>
     </g>
-    ${interactive?'<rect data-grip="" x="504" y="3" width="139" height="284" fill="transparent"/>':''}
     <g transform="rotate(-12 419 143)" fill="none" stroke="#ab4b3a" opacity=".7"><ellipse cx="419" cy="145" rx="34" ry="26"/><text x="419" y="150" text-anchor="middle" fill="#ab4b3a" stroke="none" font-family="SimSun,serif" font-size="14">售票专用</text></g>
   `);
   if(kind==='boarding')return svg(780,340,`
@@ -63,14 +62,13 @@ export function objectTicket(kind,interactive=false){
         <g fill="#52717c" font-size="16" letter-spacing="2"><text x="31" y="178">EARTH</text><text x="325" y="178">GUANGHAN · MOON</text></g>
         <path d="M159 135H282M269 128L282 135 269 142" stroke="#568e95" stroke-width="2" fill="none"/>
         <g fill="#52717c" font-size="13"><text x="30" y="213">旅客 / PASSENGER</text><text x="241" y="213">航次 / VOYAGE</text><text x="418" y="213">登船时间 / BOARDING</text></g>
-        <g fill="#173a4b" font-size="23"><text x="30" y="245">小满</text><text x="241" y="245" font-family="Consolas,monospace">SH 001</text><text x="418" y="245" font-family="Consolas,monospace">06:30</text></g>
+        <g fill="#173a4b" font-size="23"><text x="30" y="245">宁宁</text><text x="241" y="245" font-family="Consolas,monospace">SH 001</text><text x="418" y="245" font-family="Consolas,monospace">06:30</text></g>
         <path d="M30 264H553" stroke="#b8cccc"/>
         <g fill="#173a4b">${bars(31,281,235,31)}</g>
         <text x="292" y="300" fill="#52717c" font-family="Consolas,monospace" font-size="13">SH001 / EAR-XHE / 08A</text>
         <text x="292" y="319" fill="#52717c" font-size="11">2049.09.01 · 星河号 · 稻种培育任务</text>
-        ${interactive?'<g data-grip=""><rect x="473" y="282" width="90" height="32" rx="4" fill="#245460"/><text x="518" y="304" text-anchor="middle" fill="#e7fffa" font-size="16">扫描</text></g>':''}
         <g fill="#52717c" font-size="13"><text x="612" y="103">登船凭证</text><text x="612" y="166">舱门 / GATE</text><text x="612" y="242">座位 / SEAT</text></g>
-        <text x="612" y="134" fill="#173a4b" font-size="21">小满</text><text x="752" y="134" text-anchor="end" fill="#52717c" font-size="12">XIAOMAN</text>
+        <text x="612" y="134" fill="#173a4b" font-size="21">宁宁</text><text x="752" y="134" text-anchor="end" fill="#52717c" font-size="12">NINGNING</text>
         <g fill="#173a4b" font-family="Consolas,monospace" font-size="36"><text x="612" y="207">03</text><text x="612" y="284">08A</text></g>
         <text x="612" y="319" fill="#52717c" font-size="12" letter-spacing="2">SH 001 · 三天航程</text>
       </g>

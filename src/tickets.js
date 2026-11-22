@@ -17,21 +17,11 @@ export function createTicketView({letters,zones,onFlip,onClose,onDrag,onDragStar
   }
   const observer=new ResizeObserver(layout);observer.observe(get('ticketBackContent'));
   addEventListener('resize',layout);
-  function actionGrip(){return get('objectTicketFace').querySelector('[data-grip]')||get('actionProp');}
-  function movingGrip(grip){
-    if(!grip.ownerSVGElement){
-      const copy=grip.cloneNode(true);copy.removeAttribute('id');return copy;
-    }
-    // Lift the actual printed stub or scan label, including its original lettering.
-    const copy=grip.ownerSVGElement.cloneNode(true),box=grip.getBBox();
-    copy.setAttribute('viewBox',[box.x,box.y,box.width,box.height].join(' '));
-    copy.setAttribute('aria-hidden','true');return copy;
-  }
   function flip(){
     if(!visible||back)return;
     if(root.dataset.stop==='true'&&!matchMedia('(prefers-reduced-motion: reduce)').matches){
-      const prop=actionGrip(),rect=prop.getBoundingClientRect();
-      if(rect.width){const token=movingGrip(prop);token.setAttribute('class',prop.ownerSVGElement?'moving-print':'moving-prop prop-'+letters[index].kind);
+      const prop=get('actionProp'),rect=prop.getBoundingClientRect();
+      if(rect.width){const token=prop.cloneNode(true);token.removeAttribute('id');token.className='moving-prop prop-'+letters[index].kind;
         Object.assign(token.style,{position:'fixed',left:rect.left+'px',top:rect.top+'px',width:rect.width+'px',height:rect.height+'px',zIndex:32});document.body.append(token);
         const end=['translate(2px,-70px) rotate(-24deg)','translate(65px,12px) rotate(19deg)','translate(-9px,12px) rotate(-23deg)','translateX(65px)','translateY(-50px)'][index];
         token.animate([{transform:'none',opacity:1},{transform:end,opacity:0}],{duration:490,easing:'ease-out'}).finished.finally(()=>token.remove());
@@ -42,8 +32,7 @@ export function createTicketView({letters,zones,onFlip,onClose,onDrag,onDragStar
   get('ticketFront').addEventListener('click',e=>{if(ignoreClick){e.preventDefault();ignoreClick=false;return}flip()});
   get('ticketFront').addEventListener('pointerdown',e=>{
     if(e.pointerType==='mouse'&&root.dataset.stop!=='true')return;
-    e.currentTarget.setPointerCapture(e.pointerId);
-    const grip=actionGrip().getBoundingClientRect();
+    const grip=get('actionProp').getBoundingClientRect();
     const onProp=e.clientX>=grip.left-8&&e.clientX<=grip.right+8&&e.clientY>=grip.top-8&&e.clientY<=grip.bottom+8;
     ignoreClick=false;press={onProp,id:e.pointerId,x:e.clientX,y:e.clientY,previousY:e.clientY,dragged:false};
   });
@@ -55,7 +44,7 @@ export function createTicketView({letters,zones,onFlip,onClose,onDrag,onDragStar
   get('ticketFront').addEventListener('pointerup',e=>{
     if(!press||e.pointerId!==press.id)return;
     const onProp=press.onProp,dx=e.clientX-press.x,dy=e.clientY-press.y,tapped=!press.dragged,swipe=-dy;press=null;ignoreClick=true;
-    const gesture=[dy< -26,dx>26,dy>22||Math.abs(dx)>30,dx>26,Math.abs(dx)>30||onProp&&Math.abs(dy)>26][index];
+    const gesture=index===0?dy< -26:index===1||index===3?dx>26:Math.abs(dx)>30;
     if(root.dataset.stop==='true'&&!tapped&&gesture&&(onProp||e.pointerType==='mouse'||index!==0)){e.preventDefault();flip();setTimeout(()=>ignoreClick=false,500);return;}
     // Complete touch taps here and suppress a second compatibility click.
     if(tapped){e.preventDefault();flip();}
@@ -78,11 +67,11 @@ export function createTicketView({letters,zones,onFlip,onClose,onDrag,onDragStar
       const letter=letters[idx],zone=zones[idx];
       get('encounter').hidden=!stop;get('encounterYear').textContent=zone.year+' · '+zone.label;get('encounterName').textContent=letter.title;
       get('actionProp').className='prop-'+letter.kind;
-      get('actionProp').textContent=['纸角','副券','剪票钳','身份证','扫描'][idx];
-      get('actionProp').hidden=!stop||idx===1||idx===4;
+      get('actionProp').textContent=['锅盖','副券','剪票钳','身份证','扫描'][idx];
+      get('actionProp').hidden=!stop;
       root.dataset.kind=letter.kind;root.dataset.archive=String(archive);root.dataset.stop=String(stop);
       get('objectTicketFace').hidden=!!letter.rail;
-      get('objectTicketFace').innerHTML=letter.rail?'':objectTicket(letter.kind,stop);
+      get('objectTicketFace').innerHTML=letter.rail?'':objectTicket(letter.kind);
       get('railTicketFace').hidden=!letter.rail;
       get('railTicketFace').innerHTML=letter.rail?railwayTicket(letter.rail,idx===3):'';
       get('ticketYear').textContent=zone.year+' · '+zone.label;
@@ -95,7 +84,7 @@ export function createTicketView({letters,zones,onFlip,onClose,onDrag,onDragStar
       get('cardTitle').textContent=letter.backText;
       get('cardBody').textContent=letter.body;
       get('ticketBackLabel').textContent=letter.backLabel;
-      get('ticketReverseBrand').textContent=['晚稻留种便笺','东街电影院 · 票背留字','铁路旅客运输 · K1986','铁路旅客运输 · G2023','星河港 / 登船牌 · 航行留言'][idx];
+      get('ticketReverseBrand').textContent=['灶边字条','东街电影院 · 票背留字','铁路旅客运输 · K1986','铁路旅客运输 · G2023','星河港 / 登船牌 · 航行留言'][idx];
       get('cardIndex').textContent=String(idx+1).padStart(2,'0')+' / 05';
       get('ticketFront').setAttribute('aria-label',letter.frontLabel+'，'+letter.distance+'。'+(stop?scenes[idx].action:'轻点翻面阅读'));
       get('ticketComposer').hidden=idx!==4;

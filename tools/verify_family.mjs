@@ -13,14 +13,13 @@ const page=await browser.newPage({viewport:{width:1440,height:810},deviceScaleFa
 page.on('pageerror',e=>errors.push(e.message));page.on('console',m=>{if(m.type()==='error')errors.push(m.text())});
 const frame=async(name)=>{await page.evaluate(()=>__changlu.render());await page.waitForTimeout(780);await page.screenshot({path:path.join(out,name+'.jpg'),quality:92});};
 const steps=async(sec)=>page.evaluate(n=>{for(let i=0;i<Math.ceil(n*30);i++)__changlu.step(1/30);__changlu.render()},sec);
-const visitorWish='愿月面的第一穗稻平安抽绿。';
 try{
   await page.goto(pathToFileURL(path.resolve(projectRoot,'dist/山河织路-离线单文件.html')).href);
   await page.waitForFunction(()=>window.__ready||window.__error,null,{timeout:180000});
   assert.equal(await page.evaluate(()=>window.__error),null);
-  await page.locator('#loading').waitFor({state:'hidden'});await page.evaluate(()=>__changlu.freeze());await frame('cover');await page.click('#skipIntro');
-  await page.click('#overviewBtn');await steps(.1);await frame('overview');await page.click('#ovBack');
-  await page.click('#homeBtn');await page.click('#openFolio');await steps(1.2);await frame('opening');await page.click('#skipIntro');
+  await page.locator('#loading').waitFor({state:'hidden'});await page.evaluate(()=>__changlu.freeze());await page.click('#skipIntro');await page.click('#homeBtn');await frame('cover');
+  await page.click('#landingOverviewBtn');await steps(.1);await frame('overview');await page.click('#ovBack');
+  await page.click('#startBtn');await steps(4.5);await frame('opening');await page.click('#skipIntro');
   await page.click('#infoBtn');await page.selectOption('#travelSpeed','1.8');await page.check('#skipRead');await page.click('#infoClose');
   const people=await page.evaluate(()=>Object.values(__changlu.zones).map(z=>z.group.children.filter(o=>o.name.startsWith('Figure /')).map(o=>o.children.find(c=>c.isSprite).material.map.name)));
   const counts=people.map(p=>p.length);assert(counts.every(n=>n>0));assert.equal(new Set(people.flat()).size,people.flat().length);
@@ -47,21 +46,21 @@ try{
     await frame('front-'+idx);const front=await page.locator('#ticketFront').innerText();
     if(idx===2){assert(front.includes('21:47'));assert(!front.includes('****'));assert.equal(await page.locator('#railTicketFace svg g[transform]').count(),0);}
     if(idx===3)assert(front.includes('报销凭证'));
-    if(idx!==2){
-      const r=await page.locator('#ticketFront [data-grip], #actionProp:not([hidden])').boundingBox();assert(r);
+    if(idx===0||idx===1||idx===3){
+      const r=await page.locator('#actionProp').boundingBox();assert(r);
       const x=r.x+r.width/2,y=r.y+r.height/2;await page.mouse.move(x,y);await page.mouse.down();await page.mouse.move(x+(idx?37:1),y-(idx?0:37),{steps:4});await page.mouse.up();
-    }else await page.keyboard.press('r');
+    }else if(idx===2)await page.keyboard.press('r');else await page.click('#ticketFront');
     assert.equal(await page.locator('#ticketLayer').getAttribute('data-side'),'back');
     if(idx<4){await page.click('#keepLetter');await frame('back-'+idx);await page.click('#cardClose');}
-    else{await page.fill('#wishInput',visitorWish);await frame('back-4');await page.click('#skipFinale');}
+    else{await page.fill('#wishInput','桂花开了，回家吃饭。');await frame('back-4');await page.click('#skipFinale');}
   }
-  assert.equal(await page.locator('#earthWish').innerText(),visitorWish);await frame('earth');await page.click('#closeEarth');await page.waitForFunction(()=>__changlu.state.mode==='codex');
-  await page.click('#bookmarks button:last-child');assert.equal(await page.locator('.home-line').count(),5);await frame('record');
-  await page.click('#bookmarks button:nth-child(4)');await page.click('#folioEnter');await page.waitForFunction(()=>__changlu.state.mode==='travel');
-  await steps(.1);assert.equal(await page.evaluate(()=>__changlu.state.chapter),3);
+  assert.equal(await page.locator('#earthWish').innerText(),'桂花开了，回家吃饭。');await frame('earth');await page.click('#endRecord summary');
+  assert.equal(await page.locator('#keptLines p').count(),4);assert.equal(await page.locator('#endTickets .home-ticket').count(),5);await frame('record');
+  await page.click('#endRecord summary');await page.click('#againBtn');await page.click('#skipIntro');await page.click('#memoryBtn');
+  await page.click('#archiveYears button:nth-child(4)');await page.click('#returnScene');await steps(2.2);assert.equal(await page.evaluate(()=>__changlu.state.chapter),3);
   await page.setViewportSize({width:390,height:844});await steps(.1);await frame('phone-route');
-  await page.click('#memoryBtn');await page.click('.folio-object');await frame('phone-book');
-  const storage=await page.evaluate(()=>JSON.parse(localStorage.getItem('shanhe.yisui.v1')));assert.equal(storage.wish,visitorWish);assert.equal(storage.quotes.length,4);assert.equal(storage.speed,1.8);assert.equal(storage.skipRead,true);
+  await page.click('#memoryBtn');await page.click('#ticketFront');await frame('phone-book');
+  const storage=await page.evaluate(()=>JSON.parse(localStorage.getItem('shanhe.knocks')));assert.equal(storage.wish,'桂花开了，回家吃饭。');assert.equal(storage.quotes.length,4);assert.equal(storage.speed,1.8);assert.equal(storage.skipRead,true);
   assert.deepEqual(errors,[]);fs.writeFileSync(path.join(out,'checks.json'),JSON.stringify({people:counts,hotspots:10,actions:5,wish:storage.wish,kept:storage.quotes,errors},null,2));
   console.log('PASS five actions, ten details, archive jump, reading preferences, family letter, handwritten ending and portrait');
 }finally{await browser.close();}

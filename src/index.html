@@ -4,8 +4,8 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#f4f1e9">
-<meta name="description" content="一粒稻种从田埂走到星河，四代人把山河织成了路。">
-<title>山河织路 · 一穗千里</title>
+<meta name="description" content="五件纸上旧物，记录一家三代的回家路。从田埂到星河，以时代的变化映照远行与团圆。">
+<title>山河织路 · 外婆的旧册子</title>
 <link rel="icon" href="./assets/textures/seal.png">
 <link rel="stylesheet" href="./style.css">
 </head>
@@ -24,18 +24,48 @@
 <div id="app">
   <div id="world"><canvas id="gl" tabindex="-1" aria-label="五座时代之岛组成的三维山河长卷，方向键控制进退，空格前进"></canvas>
     <div class="world-top"><span class="live-dot"></span>实时三维长卷<span>SCENE 01 / 05</span></div>
-    <div class="world-caption"><span>壹 · 田埂晨 <i>1983</i></span><span>外婆在田埂上选留来年的稻种。</span></div>
+    <div class="world-caption"><span>壹 · 田埂晨 <i>1983</i></span><span>外婆留了一张字条。</span></div>
     <div class="world-coordinate" aria-hidden="true">1983 · 田埂晨</div>
   </div>
   <div id="grain" aria-hidden="true"></div><div id="ink" aria-hidden="true"></div>
 
-  <section id="loading" class="screen" aria-label="正在加载作品">
-    <div class="charge-layout">
-      <div class="charge-title" aria-label="山河织路，一穗千里"><span data-ink="山河织路">山河织路</span><span data-ink="一穗千里">一穗千里</span></div>
-      <div class="load-line" role="progressbar" aria-label="加载进度" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><i id="loadFill"></i></div>
-      <div class="load-meta"><span id="loadStatus">铺展五座山河</span><span id="loadPct">0%</span></div>
-      <div class="charge-guide"><div><b>沿路前行</b><span class="desktop-guide">滚动滚轮或按方向键，前行与回望</span><span class="touch-guide">向上轻滑前行，向下轻滑回望</span></div><div><b>聆听与拾物</b><span>听沿途双人对白，轻点旧物翻看背面<span class="desktop-guide">，也可按 R</span></span></div><div><b>声音与图鉴</b><span>建议佩戴耳机；漫游结束后可合册翻阅图鉴</span></div></div>
-    </div><button id="skipLoad" type="button" hidden>跳过引导 →</button>
+  <section id="loading" class="screen" aria-label="外婆的旧册子 · 扉页">
+    <div class="tp-left">
+      <small class="tp-kicker">外婆的旧册子</small>
+      <h1 class="tp-premise">2049 年，登船去月球之前，<br>我翻开了外婆留下的旧册子。</h1>
+      <p class="tp-detail">里面夹着我们家三代人回家的纸：一张字条，一张电影票，两张车票。今天，我要把登船牌也夹进去。</p>
+      <ul class="tp-people" aria-label="一家三代">
+        <li><img data-art="actor-harvest" alt=""><b>外婆</b><small>1983 · 田埂那头</small></li>
+        <li><img data-art="actor-mother" alt=""><b>妈妈</b><small>1996 · 二十里外</small></li>
+        <li><img data-art="actor-grower" alt=""><b>我（宁宁）</b><small>2049 · 三天航程外</small></li>
+      </ul>
+    </div>
+    <div class="tp-right">
+      <small class="tp-kicker">夹在册子里的五张纸</small>
+      <ol class="tp-papers">
+        <li><i></i><b>灶边字条</b><small>1983</small></li>
+        <li><i></i><b>东街电影票</b><small>1996</small></li>
+        <li><i></i><b>绿皮车票</b><small>2008</small></li>
+        <li><i></i><b>高铁凭证</b><small>2023</small></li>
+        <li><i></i><b>星河号登船牌</b><small>2049</small></li>
+      </ol>
+    </div>
+    <div class="tp-bottom">
+      <ul class="tp-guide" aria-label="操作说明">
+        <li><kbd>滚轮 · ↑ ↓ · 空格</kbd><span>沿路前行</span></li>
+        <li><kbd>点一下旧物</kbd><span>翻到背面</span></li>
+        <li><kbd>F</kbd><span>看看细节</span></li>
+        <li><kbd>Esc</kbd><span>返回</span></li>
+      </ul>
+      <div class="tp-actions">
+        <button id="openBook" type="button" disabled><span>正在铺开五页旧纸</span> <em id="loadPct">0%</em></button>
+        <button id="titleSoundBtn" class="tp-sound" type="button" aria-pressed="false"><svg><use href="#i-sound"/></svg><span>开启声音 · 建议戴耳机</span></button>
+      </div>
+    </div>
+    <div class="load-inner" aria-hidden="true">
+      <div class="load-line" role="progressbar" aria-label="场景加载进度" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><i id="loadFill"></i></div>
+      <div class="load-meta"><span id="loadStatus">正在铺开五页旧纸</span></div>
+    </div>
   </section>
   <section id="errorScreen" class="screen hidden" role="alert" inert>
     <div class="load-inner"><div class="load-seal">路</div><span class="overline">旅程暂未展开</span><h2>山河，还在等你。</h2><p>画面暂时没能展开，请重新尝试。</p><button id="retryBtn" class="solid-btn" type="button">继续展开 <svg><use href="#i-arrow"/></svg></button></div>
@@ -47,48 +77,50 @@
     </header>
     <div class="landing-inner"><div class="eyebrow"><span class="eyebrow-line"></span>一部可漫游的立体长卷</div>
       <div class="title-row"><h1 id="workTitle" class="title">山河<br><span>织路</span></h1></div>
-      <p class="subtitle">一穗千里 · 一家四代的归途</p>
-      <p class="poem">一粒稻种从田埂走到星河，四代人把山河织成了路。</p>
+      <p class="subtitle">外婆的旧册子 · 一家三代的归途</p>
+      <p class="poem">从田埂到星河，都记着回家吃饭。</p>
       <div class="landing-cta"><button id="startBtn" class="solid-btn" type="button">展开长卷 <svg><use href="#i-arrow"/></svg></button><button id="landingSoundBtn" class="landing-sound" type="button" aria-pressed="false"><svg><use href="#i-sound"/></svg><span>开启声音</span></button></div>
       <div class="gesture-hint"><span class="mouse-glyph"></span>轻滑前行 · 建议戴耳机体验</div>
     </div>
     <footer class="landing-foot"><span>手绘动画景观 × 交互叙事</span><span><i class="live-dot"></i> 实时三维作品 <b>融 · 合</b></span></footer>
   </section>
 
-  <section tabindex="-1" id="prologue" aria-label="翻开一穗千里" inert hidden>
-    <div class="book-stage"><div class="book-binding">
-      <div class="book-page first-act"><div class="page-type"><small>一九八三年 · 秋晨</small><h2>壹 · 田埂晨</h2><p id="bookActIntro"></p></div><i class="book-folio">二</i></div>
-      <div class="book-cover"><div class="book-cloth"><div class="book-label"><b>山河织路</b><span>一穗千里</span></div><i class="stitch"></i></div>
-      <div class="book-inside"><div class="dedication cast-guide"><small>四代人与一脉稻种</small><ul><li><b>周桂芳（外婆）</b><span>1983 山河村 · 种田选穗留种</span></li><li><b>林穗（妈妈）</b><span>1996 县城东街 · 县粮油店工作安家</span></li><li><b>宁宁（女儿）</b><span>2008—2023 · 农学院育种，改良“山河稻”</span></li><li><b>小满（外孙女）</b><span>2049 星河港 · 科研员，携新稻登月</span></li></ul><em>六十六年 · 四代接力</em></div></div></div>
-      <div class="story-leaf"><div class="leaf-face page-type"><small>一九八三 — 二〇四九</small><h2>一穗千里</h2><p>1983 年秋，山河村的周桂芳收稻时挑出抗风老晚稻留种，把字条塞进考上县城中学的女儿林穗书包里。</p><p>后来林穗在县粮油店工作安家，把家乡好米带进县城。女儿宁宁考入江城农学院研究老稻种，毕业后在云岭试验站培育出高产抗倒伏的“山河稻”。</p><p>2049 年，这脉稻种入选月面广寒站种植实验：五十九岁的宁宁守地面温室做对照，二十四岁的女儿小满登星河号赴月种植。</p></div>
-      <div class="leaf-back"><div class="book-print"><span>一九八三年 · 秋晨</span><b>田埂晨</b></div><div id="bookWindow"><canvas id="bookPicture"></canvas></div><i class="book-folio">壹</i></div></div>
-    </div></div>
-    <button id="openFolio" type="button">轻点旧册，翻开故事</button>
-    <button id="skipIntro" type="button">跳过引入 →</button>
+  <section tabindex="-1" id="prologue" aria-label="一家三代的回家路" inert hidden>
+    <div class="intro-lines"><small>外婆的旧册子</small><p id="introWords">2049 年，登船去月球之前，<br>我翻开了外婆留下的旧册子。</p></div>
+    <div class="book-stage" aria-hidden="true">
+      <div class="book-binding">
+        <div class="book-page"><div class="book-print"><span>一九八三年</span><b>田埂晨</b></div><div id="bookWindow"><canvas id="bookPicture"></canvas></div><i class="book-folio">一</i></div>
+        <div class="book-cover">
+          <div class="book-cloth"><div class="book-label"><b>山河织路</b><span>外婆的旧册子</span></div><i class="stitch"></i></div>
+          <div class="book-inside"><p>饭在灶上。<br>早点回来吃饭。</p><small>外婆留</small></div>
+        </div>
+      </div>
+    </div>
+    <button id="skipIntro" type="button">跳过引入 <span aria-hidden="true">→</span></button>
   </section>
   <header id="hud" class="hidden" inert>
     <button id="homeBtn" class="brand" type="button" aria-label="回到作品封面"><span class="small-seal">山<br>河</span><span class="brand-copy"><span class="brand-mark">山河织路</span><span class="brand-sub">SHAN HE · ZHI LU</span></span></button>
     <nav class="hud-actions" aria-label="漫游工具">
       <button id="autoBtn" type="button" aria-label="开始自动漫游" aria-pressed="false"><svg><use href="#i-play"/></svg><span id="autoTxt">自动漫游</span></button>
       <button id="detailBtn" type="button" aria-label="查看这一幕的细节"><svg><use href="#i-expand"/></svg><span>细节</span></button>
-      <button id="memoryBtn" type="button" aria-label="打开山河图鉴" aria-controls="codex" aria-haspopup="dialog"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 6C8 3 5 4 2 4v15c3-1 7-1 10 2 3-3 7-3 10-2V4c-3 0-6-1-10 2Zm0 0v15"/></svg><span>图鉴</span></button>
+      <button id="memoryBtn" type="button" aria-label="翻阅外婆的旧册子" aria-controls="ticketLayer" aria-haspopup="dialog"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 6C8 3 5 4 2 4v15c3-1 7-1 10 2 3-3 7-3 10-2V4c-3 0-6-1-10 2Zm0 0v15"/></svg><span id="memoryTxt">旧册子</span></button>
       <button id="overviewBtn" type="button" aria-label="展开长卷"><svg><use href="#i-grid"/></svg><span>展卷</span></button>
       <button id="soundBtn" type="button" aria-label="开启声音" aria-pressed="false" class="muted"><svg><use href="#i-sound"/></svg><span id="soundTxt">声音关</span></button>
       <button id="fullscreenBtn" type="button" aria-label="进入全屏"><svg><use href="#i-expand"/></svg><span>全屏</span></button>
       <button id="infoBtn" type="button" aria-label="作品与操作说明" aria-expanded="false"><svg><use href="#i-info"/></svg><span>说明</span></button>
-      <button id="moreBtn" type="button" aria-expanded="false" aria-controls="moreMenu"><svg viewBox="0 0 24 24"><path d="M4 7h16M4 12h16M4 17h16"/></svg><span>更多</span></button>
-      <div id="moreMenu" hidden><button data-tool="detailBtn">细节</button><button data-tool="overviewBtn">展卷</button><button data-tool="fullscreenBtn">全屏</button><button data-tool="infoBtn">说明</button></div>
     </nav>
   </header>
 
-  <div id="chapter" aria-live="polite"><div class="ch-body"><div class="ch-year" id="chYear"></div><h2 class="ch-title"><span id="chNum">壹</span><span id="chTitle">田埂晨</span></h2><p class="ch-setting" id="chSetting"></p><p class="ch-line" id="chLine"></p><small class="chapter-invite"><span class="desktop-guide">向下滚动，步入此刻 ↓</span><span class="touch-guide">向上轻滑，步入此刻 ↑</span></small></div></div>
+  <div id="chapter" aria-live="polite"><div class="ch-num"><span id="chNum">壹</span><i></i></div><div class="ch-body"><div class="ch-year" id="chYear"></div><h2 class="ch-title" id="chTitle">田埂晨</h2><p class="ch-setting" id="chSetting"></p><p class="ch-line" id="chLine"></p></div></div>
+  <div id="subtitle" class="narration-sub" role="status" aria-live="polite"><span></span></div>
+  <div id="interlude" class="interlude" aria-hidden="true"><small></small><b></b><p></p></div>
+  <div id="paperTags" class="paper-tags" aria-hidden="true"><div class="paper-tag"><small></small><span></span></div><div class="paper-tag"><small></small><span></span></div></div>
   <div id="travelMeta" class="travel-meta hidden" inert><span id="journeyPct">00%</span><span class="meta-rule"></span><span id="collectedTxt">票根 0 / 5</span><span id="mailFrom" hidden></span><span id="mailAction" hidden></span><button id="boardingReturn" type="button" hidden>展开登船牌 ↗</button></div>
 
   <div id="landmarks" aria-label="沿途细节"><button type="button" hidden></button><button type="button" hidden></button></div>
   <aside id="detailPanel" class="detail-panel" inert role="dialog" aria-modal="true" aria-labelledby="detailTitle">
     <div class="detail-paint" aria-hidden="true"></div><div class="detail-copy"><small id="detailYear"></small><h3 id="detailTitle"></h3><p id="detailStory"></p><div><button type="button" id="detailNext">另一处细节 →</button><button type="button" id="detailClose">回到路上</button></div></div>
   </aside>
-  <div id="captions" hidden><b></b><span></span></div>
   <div id="stopNotice" class="stop-notice" role="status" aria-live="polite">沿途票根</div>
   <div id="ticketScrim" aria-hidden="true"></div>
   <span id="storyNotice" class="sr-only" role="status"></span>
@@ -117,7 +149,7 @@
           <p id="cardBody"></p>
           <div id="ticketComposer" hidden>
             <label for="wishInput">给这段旅程留一句话 <small>可留白 · 最多 24 字</small></label>
-            <input id="wishInput" type="text" maxlength="24" autocomplete="off" placeholder="写下一句旅途留言">
+            <input id="wishInput" type="text" maxlength="24" autocomplete="off" placeholder="写下一句回家的话">
             <div class="ticket-presets" aria-label="选择旅途留言"><button type="button" data-wish></button><button type="button" data-wish></button><button type="button" data-wish></button></div>
             <p id="replyQuote" class="kept-quote" hidden></p>
           </div>
@@ -140,29 +172,42 @@
     <button data-ch="4" type="button" aria-label="第五幕 星河远 未来"><span class="tl-dot"></span><b>伍</b><em>星河远</em><small>2049</small></button>
   </div></nav>
   <div id="scrollHint" class="scroll-hint"><span></span>轻滑前行 · F 看细节</div>
-  <section id="overview" class="overview hidden" inert aria-label="五幕长卷总览"><div class="ov-head"><div class="ov-kicker">四代接力 · 一穗千里</div><h2 class="ov-title">这粒稻种走了多远？</h2><p>从 1983 年山河村外婆留下的老晚稻，到 2049 年小满带上星河号的月面实验种。五座时代之岛，记录一家四代六十六年的出发与归来。</p></div><div id="ovLabels" class="ov-labels"></div><div class="ov-foot"><button id="ovBack" type="button">回到路上 <svg><use href="#i-arrow"/></svg></button><span>选择一座岛，走进那段时间</span></div></section>
+  <section id="overview" class="overview hidden" inert aria-label="五幕长卷总览"><div class="ov-head"><div class="ov-kicker">外婆的旧册子 · 一家三代</div><h2 class="ov-title">家有多远？</h2><p>外婆的田埂、妈妈的县城、我的远方。五张夹在册子里的纸，连起一家三代的归途。</p></div><div id="ovLabels" class="ov-labels"></div><div class="ov-foot"><button id="ovBack" type="button">回到路上 <svg><use href="#i-arrow"/></svg></button><span>选择一座岛，走进那段时间</span></div></section>
 
-  <aside id="info" class="info" role="dialog" aria-modal="true" aria-labelledby="infoTitle" inert><button id="infoClose" class="card-close" type="button" aria-label="关闭作品说明"><svg><use href="#i-close"/></svg></button><div class="info-eyebrow">关于作品 / VIEWING GUIDE</div><h3 id="infoTitle">一穗千里</h3><p class="info-intro">这部作品用五座实时三维微缩场景，讲述一脉山河老稻在一家四代人手里延续六十六年的故事：外婆周桂芳在山河村选穗留种，妈妈林穗在县城粮油店工作安家，女儿宁宁考入农学院将老稻改良成高产抗倒伏新品种，外孙女小满最终带着它登上“星河号”飞赴月面广寒站。沿途可听见五段生活对白、翻阅五件纸上旧物，并在结尾将整段旅程收进《山河图鉴》。人物与故事为虚构创作。</p><div class="info-grid"><div><b>沿着路走</b><span>轻滑、滚轮或方向键控制进退。展卷后可以直接选一幕走进去。</span></div><div><b>遇见旧物</b><span>展开留种便笺的折角、撕副券、剪票、刷证、扫码。可用手势、轻点或 R 完成。在票外向前滑动即可继续。</span></div><div><b>翻到另一面</b><span>票背是一句家常话和一小段往事。读完继续游览，也可以留住喜欢的一句。</span></div><div><b>点亮归途</b><span>登船牌背面可以留下旅途留言，也可留白。点亮归途，目送火箭远去，回望整颗地球。</span></div></div><div class="view-settings"><label>漫游速度 <select id="travelSpeed"><option value="0.65">慢</option><option value="1" selected>中</option><option value="1.8">快</option></select></label><label><input id="skipRead" type="checkbox"> 重走时跳过已读票</label></div><p class="info-note">↑ ↓ 或空格前行 · R 操作旧物 · F 查看细节 · M 切换声音 · Esc 返回<br>跨岛双击画面可直达下一幕。<br>沿途对白采用合成配音，环境声实时生成。票根、留言与漫游偏好保存在本机。<br>绘景与人物使用 AI 辅助绘制。第二至五幕的树木选自 Quaternius 的 CC0 模型。三种列车沿用《轨上清风》，乡村保留 Poly Haven 的 CC0 材质。<br>地球地表：NASA Earth Observatory · Blue Marble。云层：<a href="https://www.solarsystemscope.com/textures/" target="_blank" rel="noopener">Solar System Scope / INOVE</a>，按 <a href="https://creativecommons.org/licenses/by/4.0/" target="_blank" rel="noopener">CC BY 4.0</a> 使用；原图用于分层光照、云影与色彩调整。</p><div class="info-foot">2026 · 融 / 合 · 原创数字媒体设计</div></aside>
+  <aside id="info" class="info" role="dialog" aria-modal="true" aria-labelledby="infoTitle" inert><button id="infoClose" class="card-close" type="button" aria-label="关闭作品说明"><svg><use href="#i-close"/></svg></button><div class="info-eyebrow">关于作品 / VIEWING GUIDE</div><h3 id="infoTitle">外婆的旧册子</h3><p class="info-intro">2049 年，宁宁登船去月球之前，翻开了外婆留下的旧册子。从外婆灶边的字条，到妈妈的电影票、宁宁求学的绿皮车票和下班回家的高铁票，最后是一张通向星河的登船牌。一张字条和一张登船牌之间，是城乡的交融、代际的相合。一袋稻种，从外婆的灶屋走到了月面。全片由宁宁讲述。人物与家庭往事为虚构创作。</p><div class="info-grid"><div><b>沿着路走</b><span>轻滑、滚轮或方向键控制进退。展卷后可以直接选一幕走进去。</span></div><div><b>遇见旧物</b><span>在灶边取字条、撕副券、剪票、刷证、扫码。可用手势、轻点或 R 完成。在票外向前滑动即可继续。</span></div><div><b>翻到另一面</b><span>票背是一句家常话和一小段往事。读完继续游览，也可以留住喜欢的一句。</span></div><div><b>点亮归途</b><span>登船牌背面可以留下旅途留言，也可留白。点亮归途，目送火箭远去，回望整颗地球。</span></div></div><div class="view-settings"><label>漫游速度 <select id="travelSpeed"><option value="0.65">慢</option><option value="1" selected>中</option><option value="1.8">快</option></select></label><label><input id="skipRead" type="checkbox"> 重走时跳过已读票</label></div><p class="info-note">↑ ↓ 或空格前行 · R 操作旧物 · F 查看细节 · M 切换声音 · Esc 返回<br>跨岛双击画面可直达下一幕。<br>声音由程序实时合成。票根、留言与漫游偏好保存在本机。<br>绘景与人物使用 AI 辅助绘制。第二至五幕的树木选自 Quaternius 的 CC0 模型。三种列车沿用《轨上清风》，乡村保留 Poly Haven 的 CC0 材质。<br>地球地表：NASA Earth Observatory · Blue Marble。云层：<a href="https://www.solarsystemscope.com/textures/" target="_blank" rel="noopener">Solar System Scope / INOVE</a>，按 <a href="https://creativecommons.org/licenses/by/4.0/" target="_blank" rel="noopener">CC BY 4.0</a> 使用；原图用于分层光照、云影与色彩调整。</p><div class="info-foot">2026 · 融 / 合 · 原创数字媒体设计</div></aside>
 
   <section id="homecoming" class="homecoming" hidden aria-hidden="true">
     <p id="homecomingWords" class="homecoming-words"></p>
     <div id="flightTickets" class="home-tickets"></div>
-    <p id="homecomingVerse" class="homecoming-verse">路通向最远的星河，根留在最近的山河。</p>
+    <p id="homecomingVerse" class="homecoming-verse">饭在灶上，早点回来吃饭。</p>
   </section>
   <section id="earthCaption" class="earth-caption" hidden aria-hidden="true" aria-live="polite">
-    <h2 id="earthTitle">路通向最远的星河，根留在最近的山河。</h2>
-    <p id="earthWish" aria-label="你留下的家书" hidden></p><p id="earthLine">六十六年四代接力，所有出发与归来，都在这颗星球上。</p>
+    <h2 id="earthTitle">饭在灶上，早点回来吃饭。</h2>
+    <p id="earthWish" aria-label="你留下的家书" hidden></p><p id="earthLine">那些回家的路，都在这颗星球上。</p>
+  </section>
+  <section id="albumEnd" class="album-end" hidden aria-hidden="true">
+    <div class="album-book">
+      <div class="album-spread">
+        <div class="album-head"><small class="album-kicker"></small><h2 class="album-title"></h2><p class="album-note"></p></div>
+        <svg class="album-line" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true"><path pathLength="1" vector-effect="non-scaling-stroke"/></svg>
+        <div class="album-islands"></div>
+        <div class="album-axis"><span>离家越近</span><span>回家要多久 ↑</span></div>
+        <div class="album-papers"></div>
+      </div>
+      <div class="album-cover"><div class="album-cloth book-cloth"><div class="book-label"><b>山河织路</b><span>外婆的旧册子</span></div></div><p class="album-closing"></p></div>
+    </div>
+    <button class="album-skip" type="button">跳过 →</button>
   </section>
   <section id="endCard" class="endcard" aria-live="polite" inert><div class="end-inner">
-    <div class="end-actions"><button id="closeEarth">收卷入图鉴 ↓</button></div>
-    <span class="close-invite"><span class="desktop-guide">继续向下滚动，收卷归册 ↓</span><span class="touch-guide">向上轻滑，收卷归册 ↑</span></span>
+    <h2 id="endTitle">饭在灶上，早点回来吃饭。</h2>
+    <div class="end-actions"><button id="againBtn" type="button">再走一程 <svg><use href="#i-arrow"/></svg></button><button id="endOverviewBtn" type="button">展开长卷 <svg><use href="#i-grid"/></svg></button></div>
+    <details id="endRecord" class="end-record"><summary>沿途票根</summary><div class="end-record-panel">
+      <div class="end-kicker">山河织路 · 外婆的旧册子</div><p id="endAnswer"></p>
+      <div class="end-correspondence"><div><small id="endSource"></small><p id="endQuote"></p></div><div id="endReply" hidden><small id="endRecipient"></small><p id="endWish"></p></div></div>
+      <div id="keptLines"></div><div id="endTickets" class="home-tickets end-tickets" aria-label="沿途的五张票背"></div>
+      <p class="end-theme">从田埂到星河，都记着回家吃饭。</p>
+    </div></details>
   </div></section>
-  <section id="codex" role="dialog" aria-modal="true" aria-label="山河图鉴" hidden tabindex="-1">
-    <header class="codex-head"><h2>山河图鉴</h2><button id="closeCodex" aria-label="合上图鉴">合册 ×</button></header>
-    <div class="codex-spread"><article class="folio-left"><small id="folioYear"></small><h3 id="folioTitle"></h3><button id="folioImage" aria-label="进入场景"><img alt=""/><canvas hidden></canvas></button><button id="folioEnter" class="ink-button"></button></article>
-    <article class="folio-right" tabindex="0"><div id="folioContent"></div></article><div class="turn-sheets" aria-hidden="true"></div></div>
-    <nav class="codex-nav" aria-label="图鉴翻页"><button id="folioPrev">← 上一幕</button><div id="bookmarks"></div><button id="folioNext">下一幕 →</button></nav>
-  </section>
   <div id="launchSignal" hidden aria-hidden="true"><svg viewBox="0 0 32 32"><path class="signal-star" d="M16 1 18 13 29 16 18 18 16 30 14 18 3 16 14 14Z"/><path class="signal-heart" d="M16 25C13 22 5 17 5 12a6 6 0 0 1 11-3 6 6 0 0 1 11 3c0 5-8 10-11 13Z"/></svg></div>
   <div id="toast" class="toast" role="status" aria-live="polite"></div>
 </div>

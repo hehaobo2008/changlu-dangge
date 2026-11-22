@@ -11,7 +11,7 @@ const locations=[
   [-3,38,-1260],
   [102,15,-1760],
 ];
-const names=['初秋晨光','东街霓虹','万家灯火','桥灯','火箭尾焰'];
+const names=['灶火','东街霓虹','万家灯火','桥灯','火箭尾焰'];
 
 export function fillHomeTickets(container,pages,visible=false){
   container.replaceChildren();

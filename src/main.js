@@ -1,14 +1,14 @@
-import { loadingProgress,finishLoading } from './loading.js';
-import { createCodex } from './codex.js';
-import { createDialogue } from './dialogue.js';
 import { route, crossings, routeIndex, crossingAt, hermite, travelTime, progressAtTime, travelLength, glide, arrivalCurve, sampleArrival } from './journey.js';
 import { railway } from './rail_traffic.js';
 import { futureMetro } from './future_metro.js';
 import {scenes,vesselMark,streetLightAir} from './family_scenes.js';
-import { letters } from './letters.js';
+import { letters, endingText, familyNote } from './letters.js';
 import { createTicketView } from './tickets.js';
 import { openBook,printFirstPage } from './opening.js';
 import { frameIslandMap } from './overview.js';
+import { fillHomeTickets } from './homecoming.js';
+import { setupTitlePage, titleProgress, titleReady, resetNarration, enterChapter, afterTicket, updateSubtitles, updateInterlude, updatePaperTags, chapterIdentity, playAlbum, stopAlbum } from './narration.js';
+import { pages } from './story.js';
 import { createEarthEnding, DURATION as EARTH_END } from './earth/ending.js';
 // 《山河织路》 — interactive 3D scroll. Five connected miniature landscapes.
 import * as THREE from 'three';
@@ -37,19 +37,16 @@ const lowQuality = isMobile && !q.get('high');
 const motionQuery = matchMedia('(prefers-reduced-motion: reduce)');
 let reducedMotion = motionQuery.matches;
 motionQuery.addEventListener('change', e => { reducedMotion = e.matches; });
-const ENTRY = [.1,...crossings.map(([,arrival])=>arrival)];
+const ENTRY = [.1, .315, .545, .79, .937];
 let preferences = {};
 try {
-  const current = localStorage.getItem('shanhe.yisui.v1');
+  const current = localStorage.getItem('shanhe.knocks');
   if (current) preferences = JSON.parse(current) || {};
-  else {const legacy=JSON.parse(localStorage.getItem('shanhe.knocks')||'{}');if(typeof legacy.sound==='boolean')preferences.sound=legacy.sound;}
+  else preferences.sound = JSON.parse(localStorage.getItem('shanhe.preferences') || '{}')?.sound === true;
 } catch {}
 if (typeof preferences !== 'object') preferences = {};
-const visited=new Set(preferences.visited||[0]),seen=new Set(preferences.seen||[]);
-let finishedBook=preferences.completed===true;
 function savePreferences() {
-  preferences.wish=state.replyDraft;
-  try { localStorage.setItem('shanhe.yisui.v1', JSON.stringify({ visited:[...visited],seen:[...seen],completed:finishedBook,sound: state.sound, memories:[...state.collected], quotes:[...state.kept], wish:state.replyDraft, speed:state.speed, skipRead:state.skipRead, hinted:state.hinted })); } catch {}
+  try { localStorage.setItem('shanhe.knocks', JSON.stringify({ sound: state.sound, memories:[...state.collected], quotes:[...state.kept], wish:state.replyDraft, speed:state.speed, skipRead:state.skipRead, hinted:state.hinted })); } catch {}
 }
 
 const SPACING = 420;
@@ -86,7 +83,7 @@ const OVERVIEW_POSE = { pos: [900, 700, 600], look: [0, 0, -820], fov: 42 };
 const OVERVIEW_POSE_PORTRAIT = { pos: [-341, 3192, -57], look: [0, 20, -900], fov: 48 };
 function overviewPose() { return innerWidth / innerHeight < .85 ? OVERVIEW_POSE_PORTRAIT : OVERVIEW_POSE; }
 // ---------------------------------------------------------------- UI helpers
-const el=Object.fromEntries(['loading','loadFill','loadPct','landing','startBtn','hud','chapter','chNum','chYear','chTitle','chLine','chSetting','mailFrom','mailAction','letterPages','prevLetter','nextLetter','launchSignal','cardTitle','cardBody','cardIndex','keepLetter','cardClose','tlFill','timeline','scrollHint','overviewBtn','soundBtn','soundTxt','infoBtn','info','infoClose','overview','ovLabels','ovBack','ink','wishInput','launchBtn','skipFinale','endCard','toast','world','autoBtn','autoTxt','homeBtn','travelMeta','journeyPct','collectedTxt','memoryBtn','landingSoundBtn','replyQuote'].map(id=>[id,$('#'+id)]));
+const el=Object.fromEntries(['loading','loadFill','loadPct','landing','startBtn','hud','chapter','chNum','chYear','chTitle','chLine','chSetting','mailFrom','mailAction','letterPages','prevLetter','nextLetter','launchSignal','cardTitle','cardBody','cardIndex','keepLetter','cardClose','tlFill','timeline','scrollHint','overviewBtn','soundBtn','soundTxt','infoBtn','info','infoClose','overview','ovLabels','ovBack','ink','wishInput','launchBtn','skipFinale','endCard','endWish','againBtn','endOverviewBtn','toast','world','autoBtn','autoTxt','homeBtn','travelMeta','journeyPct','collectedTxt','memoryBtn','landingSoundBtn','replyQuote','endSource','endQuote','endReply','endRecipient'].map(id=>[id,$('#'+id)]));
 el.card=$('#ticketLayer');
 const boardingReturn=$('#boardingReturn');
 
@@ -97,7 +94,7 @@ const state = {
   voidMix: 1, time: 0, mouse: new THREE.Vector2(), look: new THREE.Vector2(),
   kept:new Set((Array.isArray(preferences.quotes)?preferences.quotes:[]).filter(i=>Number.isInteger(i)&&i>=0&&i<4)),
   speed:[.65,1,1.8].includes(preferences.speed)?preferences.speed:1,skipRead:preferences.skipRead===true,hinted:preferences.hinted===true,
-  keptLetter: null, delivered: 0, reading: 0, replyDraft: typeof preferences.wish==='string'?preferences.wish:'', wish: '', sound: preferences.sound !== false, ready: false, frozen: false,
+  keptLetter: null, delivered: 0, reading: 0, replyDraft: '', wish: '', sound: preferences.sound === true, ready: false, frozen: false,
   auto: false, modal: null, autoPages:true, presented:new Set(), watchingFor:-1, watchingTime:0, arrival:null, storyStop:null, routeVelocity:0, glideSpeed:0, metreSpeed:0, braking:null, pendingLaunch:null, introTime:0, approach:null,
   collected: new Set((Array.isArray(preferences.memories) ? preferences.memories : []).filter(i => Number.isInteger(i) && i >= 0 && i < 5)),
 };
@@ -129,6 +126,7 @@ function syncUIState(force = false) {
 let panelReturnFocus = null;
 function closePanels(restoreFocus=true){
   const wasOpen=state.modal,resume=state.resumeAfterTicket;
+  if(wasOpen===el.card&&state.mode==='travel')afterTicket(state.reading);
   el.info.classList.remove('show');el.info.inert=true;$('#detailPanel').classList.remove('show');$('#detailPanel').inert=true;tickets.hide();
   state.modal=null;state.arrival=null;state.storyStop=null;state.braking=null;state.glideSpeed=state.metreSpeed=0;state.target=state.progress;
   state.resumeAfterTicket=false;el.infoBtn.setAttribute('aria-expanded','false');syncUIState(true);
@@ -142,7 +140,6 @@ function closePanels(restoreFocus=true){
   }
 }
 function openPanel(panel,focusTarget){
-  dialogue.stop();closeMore();
   const returnFocus=document.activeElement;
   cancelArrival();closePanels(false);setAuto(false);
   clearTimeout(showToast._t);el.toast.classList.remove('show');
@@ -155,7 +152,7 @@ function setAuto(on) {
   state.auto = !!on;
   el.autoBtn.setAttribute('aria-pressed', String(state.auto));
   el.autoBtn.setAttribute('aria-label', state.auto ? '暂停自动漫游' : '开始自动漫游');
-  el.autoTxt.textContent = state.auto ? '暂停' : (innerWidth<820?'漫游':'自动漫游');
+  el.autoTxt.textContent = state.auto ? '暂停漫游' : '自动漫游';
   el.autoBtn.querySelector('use').setAttribute('href', state.auto ? '#i-pause' : '#i-play');
 }
 function routePixelRatio(width,height,step=0){
@@ -267,8 +264,11 @@ const totalAssets = ZONES.length + 7 + 1;
 function bumpLoad() {
   loadedCount++;
   const pct = Math.min(80, Math.round(loadedCount / totalAssets * 80));
-  loadingProgress(pct);
-  $('#loadStatus').textContent = `正在铺开五段路 · ${loadedCount} / ${totalAssets}`;
+  if (el.loadFill) el.loadFill.style.width = pct + '%';
+  if (el.loadPct) el.loadPct.textContent = pct + '%';
+  $('.load-line').setAttribute('aria-valuenow', String(pct));
+  $('#loadStatus').textContent = `正在铺开五页旧纸 · ${loadedCount} / ${totalAssets}`;
+  titleProgress(pct);
 }
 async function loadAsset(url) {
   const asset=await gltfLoader.loadAsync(await loadAssetURL(url));
@@ -784,7 +784,9 @@ function setChapterUI(idx, visible) {
     state.uiChapter = idx;
     const chapter = ZONES[idx], letter = letters[idx];
     el.chNum.textContent = chapter.num;
-    el.chYear.textContent = `${chapter.year} · ${letter.distance}`;
+    const who = chapterIdentity(idx);
+    el.chYear.textContent = `${who.stamp} · ${who.place}`;
+
     el.chTitle.textContent = chapter.label;
     el.chLine.textContent = letter.routeLine;
     el.chSetting.textContent = letter.setting;
@@ -792,6 +794,14 @@ function setChapterUI(idx, visible) {
       b.classList.toggle('active', i === idx);
       if (i === idx) b.setAttribute('aria-current', 'step'); else b.removeAttribute('aria-current');
     });
+  }
+  if (visible && state.introChapter !== idx && (state.mode === 'travel' || state.mode === 'approach')) {
+    state.introChapter = idx;
+    enterChapter(idx);
+    // 直接在中央出现，不从左下角滑过去；离开中央时再用过渡沉到左下。
+    el.chapter.style.transition='none';el.chapter.classList.add('intro');void el.chapter.offsetWidth;el.chapter.style.transition='';
+    clearTimeout(setChapterUI._intro);
+    setChapterUI._intro = setTimeout(() => el.chapter.classList.remove('intro'), reducedMotion ? 1600 : 2800);
   }
   el.chapter.classList.toggle('show', !!visible);
 }
@@ -813,29 +823,30 @@ function refreshFirstPage(){
 }
 function disposeOpening(){book?.dispose();book=null;}
 function finishPrologue(){
-  if(!state.hinted){state.hinted=true;savePreferences();}
+  if(!state.hinted){state.hinted=true;savePreferences();showToast(isTouch?'轻滑前行 · 轻点路上的圆点看细节':'↑ ↓ 前行 · R 操作旧物 · F 看细节');}
   if(state.mode!=='prologue')return;
   disposeOpening();state.mode='travel';state.progress=state.target=ENTRY[0];state.glideSpeed=0;
   state.look.set(0,0);state.mouse.set(0,0);updateCamera(2);syncUIState(true);canvas.focus({preventScroll:true});
 }
 function playPrologue(dt){
-  if(book?.update(dt))finishPrologue();
+  state.introTime+=dt;
+  updateCamera(dt);
+  book?.update(state.introTime);
+  if(!reducedMotion && state.introTime>=11.0)finishPrologue();
 }
 function startExperience(quick=false){
   if(!state.ready||state.started)return;
   resetLetters();state.started=true;state.progress=state.target=ENTRY[0];
   state.mode=quick===true?'travel':'prologue';state.introTime=0;state.look.set(0,0);syncUIState(true);
-  resetNarrative();
+  if(state.sound){audio.init();audio.motif(false);}
   if(state.mode==='prologue'){
-    $('#bookActIntro').textContent=letters[0].setting;
-    book=openBook(intro,reducedMotion,refreshFirstPage,()=>{audio.init();if(audio.chapter!==0)audio.setChapter(0);audio.pageTurn();});
-    $('#skipIntro').textContent=reducedMotion?'进入长卷 →':'跳过引入 →';
+    book=openBook(intro,reducedMotion,refreshFirstPage);
+    $('#skipIntro').firstChild.textContent=reducedMotion?'进入长卷 ':'跳过引入 ';
     updateCamera(2);playPrologue(0);intro.focus({preventScroll:true});
   }
 }
-$('#skipIntro').addEventListener('click',()=>{audio.init();finishPrologue();});
+$('#skipIntro').addEventListener('click',finishPrologue);
 function approachIsland(idx) {
-  resetNarrative();state.presented.delete(idx);
   if(!state.ready)return;
   if(!state.started) startExperience(true);
   closePanels(false);setAuto(false);disposeFinale();
@@ -849,7 +860,7 @@ function approachIsland(idx) {
   state.chapter=idx;state.watchingFor=-1;state.watchingTime=0;inputDirection=0;trains?.reset();
   state.approach={from,to,wideLook,look,elapsed:0,duration:2.05,fov:sampleFov(p)+(camera.aspect<.8?5:0)};
   state.mode=reducedMotion?'travel':'approach';
-  syncUIState(true);setChapterUI(idx,false);if(state.sound)audio.init();audio.setChapter(idx);updateCamera(0);
+  syncUIState(true);setChapterUI(idx,false);audio.setChapter(idx);updateCamera(0);
   if(reducedMotion) canvas.focus({preventScroll:true});
 }
 function jumpTo(t) {
@@ -868,7 +879,6 @@ function jumpTo(t) {
   syncUIState(true);
 }
 function enterOverview() {
-  dialogue.stop();closeMore();
   if(!state.ready)return;
   cancelArrival();
   if (state.mode === 'overview') return;
@@ -897,7 +907,7 @@ function exitOverview(toTravel = false) {
   else if (state.mode === 'travel') el.overviewBtn.focus({ preventScroll: true });
   else if (state.mode === 'ended') {
     earthEnding.begin();finale.t=EARTH_END;earthEnding.update(EARTH_END);renderFrame();
-    $('#closeEarth').focus({ preventScroll: true });
+    el.endOverviewBtn.focus({ preventScroll: true });
   }
 }
 function buildOverviewLabels() {
@@ -905,7 +915,8 @@ function buildOverviewLabels() {
   for (const z of ZONES) {
     const b = document.createElement('button');
     b.className = 'ov-label'; b.type = 'button';
-    b.innerHTML = `<i></i><b>${z.num} · ${z.label}</b><em>${z.year}</em>`;
+    const zi = ZONES.indexOf(z);
+    b.innerHTML = `<i></i><b>${z.num} · ${z.label}</b><em>${z.year}</em><small>${letters[zi].cue} · ${pages[zi].ride}</small>`;
     b.addEventListener('click', () => approachIsland(ZONES.indexOf(z)));
     b.dataset.zone = z.id;
     el.ovLabels.appendChild(b);
@@ -966,7 +977,8 @@ function updateMail(){
   if(through>state.delivered){state.delivered=through;if(state.modal===el.card)updateLetterPages();}
   const idx=offeredLetter();
   el.mailFrom.textContent=letters[idx].title;
-  el.mailAction.textContent='打开山河图鉴';
+  el.mailAction.textContent='翻阅票夹';
+  el.memoryBtn.setAttribute('aria-label','翻阅票夹，'+letters[idx].distance);
 }
 const ticketStops=[.128,.342,.572,.812,1];
 const islandEnds=[.200,.405,.629,.847,1.001];
@@ -1055,6 +1067,7 @@ function openCard(which,reading=true){
 }
 function updateCollection(){
   el.collectedTxt.textContent='票根 '+state.collected.size+' / 5';
+  const memoryTxt=$('#memoryTxt');if(memoryTxt)memoryTxt.textContent='旧册子 '+state.collected.size+'/5';
   $$('#timeline button[data-ch]').forEach((b,i)=>b.classList.toggle('collected',state.collected.has(i)));
 }
 function updateKeepButton(idx){
@@ -1062,6 +1075,7 @@ function updateKeepButton(idx){
   el.keepLetter.setAttribute('aria-pressed',String(kept));el.keepLetter.textContent=kept?'已留住 · 取出':'留住这句话';
 }
 function resetLetters(){
+  resetNarration();state.uiChapter=-1;state.introChapter=-1;
   cancelArrival();state.storyStop=null;state.braking=null;state.routeVelocity=state.glideSpeed=state.metreSpeed=0;
   state.keptLetter=[...state.kept].at(-1)??null;state.presented.clear();state.watchingFor=-1;state.watchingTime=0;state.resumeAfterTicket=false;
   state.delivered=0;state.reading=0;trains?.reset();metro?.reset();inputDirection=0;state.replyDraft=typeof preferences.wish==='string'?preferences.wish.slice(0,24):'';state.wish='';state.pendingLaunch=null;
@@ -1072,6 +1086,9 @@ function prepareReply(){
   el.wishInput.value=state.replyDraft;
   $$('[data-wish]').forEach((button,i)=>button.dataset.wish=button.textContent=letters[4].replies[i]);
 }
+function homeTicketPages(){
+  return letters.map((letter,i)=>({year:ZONES[i].year,words:i===4?(state.wish||letter.backText):letter.backText}));
+}
 const tickets=createTicketView({letters,zones:ZONES,onFlip:readTicket,onClose:shelveArrival,
   onSwipe:distance=>continueFromTicket(distance),
   onDrag:distance=>{if(!state.modal)advanceByInput(distance)},onDragStart:()=>{if(!state.modal){setAuto(false);state.jumping=null;inputDirection=0;}},onLaunch:launchFinale});
@@ -1080,78 +1097,14 @@ const tickets=createTicketView({letters,zones:ZONES,onFlip:readTicket,onClose:sh
 const audio = new Soundscape((on) => {
   state.sound = on;
   el.soundBtn.classList.toggle('muted', !on);
-  el.soundTxt.textContent = innerWidth<820?'声音':(on?'声音开':'声音关');
+  el.soundTxt.textContent = on ? '声音开' : '声音关';
   el.soundBtn.setAttribute('aria-label', on ? '关闭声音' : '开启声音');
   el.soundBtn.setAttribute('aria-pressed', String(on));
   el.landingSoundBtn.setAttribute('aria-pressed', String(on));
   el.landingSoundBtn.querySelector('span').textContent = on ? '声音已开启' : '开启声音';
+  const titleSound=$('#titleSoundBtn');if(titleSound){titleSound.setAttribute('aria-pressed',String(on));titleSound.querySelector('span').textContent=on?'声音已开启':'开启声音 · 建议戴耳机';}
   savePreferences();
 }, state.sound);
-const dialogue=createDialogue(audio);
-let currentAct=-1,heroHold=2.5,narrationPace=1;
-const heard=new Set();
-function resetNarrative(){dialogue.stop();heard.clear();currentAct=-1;heroHold=2.5;}
-function chapterMorph(idx,m){
-  setChapterUI(idx,!state.modal);
-  const cornerX=innerWidth*(innerWidth<820?.055:.046);
-  const shortLandscape=innerHeight<=530&&innerWidth>innerHeight;
-  const clearance=shortLandscape?101:innerWidth<=360?177:innerWidth<820?151:128;
-  const cornerY=innerHeight-clearance;
-  const st=el.chapter.style;
-  st.setProperty('--cx',(innerWidth*.5*(1-m)+cornerX*m)+'px');
-  st.setProperty('--cy',(innerHeight*.5*(1-m)+cornerY*m)+'px');
-  st.setProperty('--align',(50*(1-m))+'%');
-  // At the corner, anchor the scaled panel by its bottom, including wrapped lines.
-  st.setProperty('--align-y',(50+21*m)+'%');
-  st.setProperty('--cs',String(1-.29*m));st.setProperty('--long',1-smooth((m-.15)/.4));
-  st.setProperty('--short',smooth((m-.55)/.45));el.chapter.dataset.compact=String(m===1);
-}
-function fadeChapter(){
-  if(!reducedMotion)el.chapter.animate([{opacity:0},{opacity:1}],{duration:760,easing:'ease-out'});
-}
-function updateNarrative(){
-  const flight=crossingAt(state.progress);
-  if(flight&&flight.blend<.82){dialogue.stop();el.chapter.classList.remove('show');currentAct=-1;return;}
-  const idx=flight?flight.to:routeIndex(state.progress);
-  const entering=currentAct!==idx;
-  if(entering){dialogue.stop();currentAct=idx;heroHold=2.5;if(!visited.has(idx)){visited.add(idx);savePreferences();}}
-  const distance=travelTime(state.progress)-travelTime(ENTRY[idx]),m=smooth(distance/10);
-  chapterMorph(idx,m);
-  if(entering)fadeChapter();
-  if(m>=.999&&!heard.has(idx)&&!state.modal&&!flight&&!state.jumping&&state.progress<ticketStops[idx]){
-    heard.add(idx);dialogue.play(idx);
-    narrationPace=clamp((travelTime(ticketStops[idx])-travelTime(state.progress)-4)/(dialogue.duration(idx)+1),.12,3.65*state.speed);
-  }
-}
-const codex=createCodex({audio,dialogue,visited,seen,kept:state.kept,completed:()=>finishedBook,wish:()=>state.wish||state.replyDraft,unmute:()=>{if(!state.sound)toggleSound();},
-  close(){state.mode=codexOrigin;syncUIState(true);if(state.mode==='ended'){$('#earthCaption').hidden=false;$('#closeEarth').focus();}else el.memoryBtn.focus();},
-  scene(i){disposeFinale();resetNarrative();state.presented.delete(i);state.progress=state.target=ENTRY[i];state.jumping=null;state.glideSpeed=0;state.look.set(0,0);state.mouse.set(0,0);trains?.reset();metro?.reset();updateCamera(5);updateSkyLights(8);updateZoneVisibility();updateAmbient(0);paper.render();return canvas;},
-  enter(i){state.mode='travel';state.chapter=i;state.finaleShown=false;audio.setChapter(i);syncUIState(true);updateNarrative();canvas.focus();},
-  again(){codex.hide();resetExperience();},map(){codex.hide();state.mode=codexOrigin;enterOverview();}
-});
-let codexOrigin='travel',earthTouch=null;
-function openCodex(){
-  if(state.mode!=='travel'||state.modal)return;
-  codexOrigin='travel';const idx=currentAct>=0?currentAct:routeIndex(state.progress);
-  visited.add(idx);savePreferences();closePanels(false);setAuto(false);dialogue.stop();closeMore();state.jumping=null;
-  state.mode='codex';syncUIState(true);codex.open(idx);
-}
-function rewindEarth(){
-  if(state.mode!=='ended')return;
-  earthEnding.render();codexOrigin='ended';state.mode='closing-book';syncUIState(true);$('#earthCaption').hidden=true;
-  codex.rewind(canvas,()=>{state.mode='codex';syncUIState(true);});
-}
-$('#codex').addEventListener('read-detail',savePreferences);
-$('#closeEarth').onclick=rewindEarth;
-document.addEventListener('touchstart',e=>{earthTouch=state.mode==='ended'?e.touches[0].clientY:null;},{passive:true});
-document.addEventListener('touchend',e=>{if(earthTouch!==null&&earthTouch-e.changedTouches[0].clientY>35)rewindEarth();earthTouch=null;},{passive:true});
-function closeMore(){const menu=$('#moreMenu');menu.hidden=true;$('#moreBtn').setAttribute('aria-expanded','false');}
-$('#moreBtn').onclick=()=>{const menu=$('#moreMenu');menu.hidden=!menu.hidden;$('#moreBtn').setAttribute('aria-expanded',String(!menu.hidden));};
-$('#moreMenu').onclick=e=>{const id=e.target.closest('[data-tool]')?.dataset.tool;if(id){closeMore();$('#'+id).click();}};
-document.addEventListener('pointerdown',e=>{if(!e.target.closest('.hud-actions'))closeMore();});
-const narrowTools=matchMedia('(max-width:819px)');
-function sizeTools(){closeMore();el.autoTxt.textContent=state.auto?'暂停':narrowTools.matches?'漫游':'自动漫游';el.soundTxt.textContent=narrowTools.matches?'声音':state.sound?'声音开':'声音关';}
-narrowTools.addEventListener('change',sizeTools);sizeTools();
 function toggleSound() { audio.init(); audio.toggle(); }
 // Apply saved preference without creating an AudioContext before a gesture.
 audio.onChange(state.sound);
@@ -1184,7 +1137,6 @@ addEventListener('wheel', (e) => {
     if(pixels>0&&fresh)continueFromTicket(pixels*.019);
     return;
   }
-  if(state.mode==='ended'&&pixels>18){e.preventDefault();rewindEarth();return;}
   if(holdForTicket())return;
   if(state.mode==='landing'){
     entryWheelPixels=Math.max(0,(fresh?0:entryWheelPixels)+pixels);
@@ -1249,9 +1201,7 @@ addEventListener('keydown', (e) => {
   if(state.arrival && e.key==='Escape'){
     e.preventDefault();shelveArrival();return;
   }
-  if(state.mode==='prologue'){if(e.key==='Escape'){e.preventDefault();audio.init();finishPrologue();}return;}
-  if(['codex','closing-book'].includes(state.mode))return;
-  if(!$('#moreMenu').hidden&&e.key==='Escape'){closeMore();$('#moreBtn').focus();return;}
+  if(state.mode==='prologue'){if(e.key==='Escape'){e.preventDefault();finishPrologue();}return;}
   if (e.key === 'Escape') {
     if (state.modal) closePanels();
     else if (state.mode === 'overview') exitOverview();
@@ -1293,6 +1243,8 @@ el.overviewBtn.addEventListener('click', () => { audio.sfx('click'); state.mode 
 el.ovBack.addEventListener('click', () => { audio.sfx('click'); exitOverview(); });
 el.soundBtn.addEventListener('click', toggleSound);
 el.landingSoundBtn.addEventListener('click', toggleSound);
+$('#titleSoundBtn').addEventListener('click', toggleSound);
+setupTitlePage(isTouch);
 el.infoBtn.addEventListener('click', () => { audio.sfx('click'); openPanel(el.info, el.infoClose); });
 $('#landingInfoBtn').addEventListener('click', () => openPanel(el.info, el.infoClose));
 $('#landingOverviewBtn').addEventListener('click', enterOverview);
@@ -1322,30 +1274,27 @@ el.keepLetter.addEventListener('click', () => {
   state.keptLetter=[...state.kept].at(-1)??null;savePreferences();
   updateKeepButton(idx);
 });
-el.memoryBtn.addEventListener('click',openCodex);
-// Handle a completed touch directly. Chromium can suppress the compatibility
-// click on the first control tapped after a canvas or ticket swipe.
-const toolsBar=$('.hud-actions');
-let toolPress=null,lastToolTap=null;
-toolsBar.addEventListener('pointerdown',e=>{
-  const button=e.target.closest('button');
-  if(button&&e.pointerType!=='mouse')toolPress={id:e.pointerId,button,x:e.clientX,y:e.clientY};
-});
-toolsBar.addEventListener('pointerup',e=>{
-  const press=toolPress;toolPress=null;
-  if(press?.id!==e.pointerId||e.target.closest('button')!==press.button||Math.hypot(e.clientX-press.x,e.clientY-press.y)>=9)return;
-  lastToolTap={button:press.button,time:performance.now()};
-  e.preventDefault();press.button.click();
-});
-toolsBar.addEventListener('click',e=>{
-  if(e.isTrusted&&e.detail&&lastToolTap?.button===e.target.closest('button')&&performance.now()-lastToolTap.time<500){
-    e.preventDefault();e.stopImmediatePropagation();
-  }
-},true);
-toolsBar.addEventListener('pointercancel',()=>{toolPress=null;});
+el.memoryBtn.addEventListener('click',()=>openCard(offeredLetter(),false));
 boardingReturn.addEventListener('click',()=>openCard(4,false));
+// Finish a touch tap explicitly: some Chromium touch sequences omit the
+// compatibility click after a ticket is swiped away. openCard is idempotent.
+let memoryPress=null;
+el.memoryBtn.addEventListener('pointerdown',e=>{if(e.pointerType!=='mouse')memoryPress={id:e.pointerId,x:e.clientX,y:e.clientY};});
+el.memoryBtn.addEventListener('pointerup',e=>{
+  const start=memoryPress;memoryPress=null;
+  if(start?.id===e.pointerId&&Math.hypot(e.clientX-start.x,e.clientY-start.y)<9){e.preventDefault();openCard(offeredLetter(),false);}
+});
+el.memoryBtn.addEventListener('pointercancel',()=>memoryPress=null);
 el.autoBtn.addEventListener('click', () => { if (state.mode === 'travel' && !state.modal) { setAuto(!state.auto); if (state.auto) showToast('自动漫游中 · 手动操作可暂停'); } });
-el.homeBtn.addEventListener('click',resetExperience);
+el.homeBtn.addEventListener('click', () => {
+  cancelArrival();
+  closePanels(false);setAuto(false);disposeFinale();disposeOpening();
+  state.started = false; state.mode = 'landing'; state.progress = 0; state.target = 0;
+  state.jumping = null; state.finaleShown = false; state.chapter = -1;
+  el.endCard.classList.remove('show'); el.endCard.inert = true;
+  el.chapter.classList.remove('show');
+  syncUIState(true); el.startBtn.focus({ preventScroll: true });
+});
 el.wishInput.addEventListener('input', () => {
   state.replyDraft=el.wishInput.value;preferences.wish=state.replyDraft;savePreferences();
 });
@@ -1363,7 +1312,7 @@ $('#fullscreenBtn').addEventListener('click', async () => {
 });
 addEventListener('fullscreenchange', () => $('#fullscreenBtn').setAttribute('aria-label', document.fullscreenElement ? '退出全屏' : '进入全屏'));
 document.addEventListener('visibilitychange', () => {
-  if (document.hidden) { dialogue.stop();state.resumeAfterTicket=false;setAuto(false); audio.suspend(); }
+  if (document.hidden) { state.resumeAfterTicket=false;setAuto(false); audio.suspend(); }
   else { last = performance.now(); audio.resume(); }
 });
 el.timeline.addEventListener('click', (e) => {
@@ -1374,6 +1323,8 @@ el.timeline.addEventListener('click', (e) => {
   const z = ZONES[i];
   approachIsland(i);
 });
+el.againBtn.addEventListener('click', () => resetExperience());
+el.endOverviewBtn.addEventListener('click', () => { el.endCard.classList.remove('show'); el.endCard.inert = true; enterOverview(); });
 el.wishInput.addEventListener('keydown', (e) => { if (e.key === 'Enter' && !e.isComposing && e.keyCode !== 229 && !el.launchBtn.parentElement.hidden) launchFinale(); });
 
 const viewportObserver = new ResizeObserver(resizeViewport);
@@ -1382,6 +1333,7 @@ viewportObserver.observe(el.world);
 // ---------------------------------------------------------------- finale
 let finale = {t:0,active:false};
 function disposeFinale(){
+  stopAlbum();el.endCard.classList.remove('album-wait');
   earthEnding?.reset();
   finale={t:0,active:false};
   el.launchSignal.hidden=true;
@@ -1412,12 +1364,23 @@ function showEnd(){
   finale.t=EARTH_END;finale.active=false;earthEnding.update(EARTH_END);
   state.mode='ended';state.ended=true;
   el.launchSignal.hidden=true;$('#homecoming').hidden=true;
+  const letter=state.keptLetter===null?null:letters[state.keptLetter];
+  el.endSource.textContent='留住的那句话';el.endQuote.textContent=letter?letter.excerpt:'';
+  el.endSource.parentElement.hidden=!letter;
+  el.endRecipient.textContent='旅途留言';el.endWish.textContent=state.wish;el.endReply.hidden=!state.wish;
+  $('#endAnswer').textContent=endingText;$('#endTitle').textContent=familyNote;
+  const kept=$('#keptLines');kept.replaceChildren();
+  for(const idx of [...state.kept].sort()){const line=document.createElement('p');line.textContent=letters[idx].sender+'　'+letters[idx].excerpt;kept.append(line);}
+  el.endSource.parentElement.hidden=true;
   audio.motif(true);
   el.endCard.dataset.ending='earth';
+  fillHomeTickets($('#endTickets'),homeTicketPages(),true);
   el.endCard.classList.add('show');
   el.hud.classList.add('hidden');el.timeline.classList.add('hidden');el.chapter.classList.remove('show');
-  finishedBook=true;ZONES.forEach((_,i)=>visited.add(i));savePreferences();
-  closePanels(false);syncUIState(true);$('#closeEarth').focus({preventScroll:true});
+  closePanels(false);syncUIState(true);
+  if(captureMode||(navigator.webdriver&&!q.has('title'))){$('#endRecord summary').focus({preventScroll:true});return;}
+  el.endCard.classList.add('album-wait');
+  playAlbum(()=>{el.endCard.classList.remove('album-wait');$('#endRecord summary').focus({preventScroll:true});},reducedMotion);
 }
 function renderFrame(){
   if(earthEnding?.active&&['finale','ended'].includes(state.mode))earthEnding.render();
@@ -1431,7 +1394,6 @@ function resetExperience(){
 
 // ---------------------------------------------------------------- main loop
 function tick(dt, draw = true) {
-  if(['closing-book','codex'].includes(state.mode))return;
   if(!reducedMotion && state.mode!=='prologue')state.time+=dt;
   if(earthEnding?.active&&['finale','ended'].includes(state.mode)){
     if(!earthEnding.inOrbit){updateSkyLights(dt);updateZoneVisibility();updateAmbient(dt);}
@@ -1451,10 +1413,7 @@ function tick(dt, draw = true) {
     }
   }
   if (state.auto && state.mode === 'travel' && !state.modal && !state.storyStop) {
-    const idx=routeIndex(state.progress),past=travelTime(state.progress)-travelTime(ENTRY[idx]);
-    if(past>=0&&past<1&&heroHold>0){heroHold-=dt;}
-    else {const pace=dialogue.active&&!dialogue.active.complete?narrationPace:3.65*state.speed;
-      state.target=progressAtTime(travelTime(state.target)+dt*pace);}
+    state.target=progressAtTime(travelTime(state.target)+dt*3.65*state.speed);
   }
   guideToTicket();
   if (state.mode === 'travel' || state.mode === 'landing') {
@@ -1499,7 +1458,7 @@ function tick(dt, draw = true) {
       setChapterUI(ci, ci >= 0);
       if (ci >= 0) audio.setChapter(ci);
     }
-    if(state.mode==='travel')updateNarrative();
+    setChapterUI(state.chapter, state.chapter >= 0 && state.voidMix < .55 && state.mode !== 'overview');
     updateCamera(dt);
     // finale trigger
     if (state.progress < .993) state.finaleShown = false;
@@ -1518,6 +1477,12 @@ function tick(dt, draw = true) {
   updateAmbient(dt);
   camera.updateMatrixWorld();
   updateMail();presentAlongRoute(dt);updateLandmarks();
+  {
+    const travelling=state.mode==='travel'&&!state.modal;
+    updateSubtitles(dt,!travelling||!!state.crossing||state.jumping!==null&&state.jumping!==undefined);
+    updateInterlude(state.crossing,travelling&&!state.jumping);
+    updatePaperTags(camera,zones,routeIndex(state.progress),travelling&&!state.crossing);
+  }
   const darkChapter=i=>i===2 || i===4;
   const crossing=state.crossing;
   const night=crossing ? THREE.MathUtils.lerp(+darkChapter(crossing.from),+darkChapter(crossing.to),crossing.blend) : +darkChapter(state.chapter);
@@ -1602,7 +1567,8 @@ async function prepareRoute() {
     for (const [i,p] of samples.entries()) {
       state.progress=p;
       const percent=80+Math.round(19*(i+1)/samples.length);
-      loadingProgress(percent);
+      el.loadFill.style.width=percent+'%'; el.loadPct.textContent=percent+'%';titleProgress(percent);
+      $('.load-line').setAttribute('aria-valuenow',String(percent));
       $('#loadStatus').textContent='准备沿途画面 · '+ZONES[routeIndex(p)].label;
       await new Promise(done=>requestAnimationFrame(done));
       updateCamera(1);updateSkyLights(1);updateZoneVisibility();updateAmbient(0);
@@ -1643,14 +1609,22 @@ async function boot() {
   updateAmbient(0);updateCollection();
   paper.render();printFirstPage($('#bookPicture'),canvas);printedAtBoot=true;
   await waitForPreviewDraw();
-  await finishLoading();
   state.ready=true;window.__ready=true;
   el.loadFill.style.width = '100%'; el.loadPct.textContent = '100%';
   $('.load-line').setAttribute('aria-valuenow','100');
-  el.loading.inert=true;
-  el.loading.classList.add('hidden');
-  startExperience();
+  titleProgress(100);
+  const openTheBook=()=>{
+    if(state.started)return;
+    el.loading.inert=true;
+    el.loading.classList.add('hidden');
+    startExperience();
+    // The closed cover is already on the title page; open it straight away.
+    state.introTime=4.7;playPrologue(0);
+  };
   last=performance.now();requestAnimationFrame(raf);
+  // 自动化测试与截图（capture=1、webdriver）直接翻开；加 ?title=1 可在自动化里查看扉页。
+  if(captureMode||q.has('autostart')||(navigator.webdriver&&!q.has('title')))openTheBook();
+  else titleReady(openTheBook);
 }
 export const ready = boot();
 
@@ -1720,7 +1694,7 @@ function fileTicket(){
 let detailChapter=0,detailIndex=0;
 function showDetail(idx,n){
   if(state.mode!=='travel'||state.modal&&state.modal!==$('#detailPanel'))return;
-  detailChapter=idx;detailIndex=n;seen.add(idx+'-'+n);savePreferences();
+  detailChapter=idx;detailIndex=n;
   const panel=$('#detailPanel'),s=scenes[idx];panel.dataset.kind=letters[idx].kind;panel.dataset.spot=String(n);
   $('#detailYear').textContent=ZONES[idx].year+' · '+ZONES[idx].label;$('#detailTitle').textContent=s.spots[n];$('#detailStory').textContent=s.stories[n];
   if(state.modal!==panel)openPanel(panel,$('#detailClose'));

@@ -48,7 +48,7 @@ signs={word:letters(word,face,space) for word,face,space in (
 (ROOT/"src"/"shop_letters.json").write_text(json.dumps(signs,ensure_ascii=False,separators=(",",":")),"utf8")
 with TTFont(FACES/brush) as font:
     subsetter=subset.Subsetter()
-    subsetter.populate(text="山河织路田埂晨街市暮城夜雨山河速星河远五座时代之岛全卷总览一穗千里")
+    subsetter.populate(text="山河织路田埂晨街市暮城夜雨山河速星河远五座时代之岛全卷总览")
     subsetter.subset(font)
     font.flavor="woff"
     target=ROOT/"assets"/"fonts"

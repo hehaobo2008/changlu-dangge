@@ -103,6 +103,7 @@ export async function createEarthEnding({renderer,scene,camera,paper,sky,rocket,
   const size=renderer.getSize(new THREE.Vector2());renderer.setSize(size.x,size.y,false);paper.setSize(size.x,size.y);
   paper.paperPass.uniforms.ink.value=initial.ink;paper.paperPass.uniforms.grainAmount.value=initial.grain;
   caption.hidden=true;caption.setAttribute('aria-hidden','true');
+  document.querySelector('#endRecord').open=false;
  }
  // Upload full-resolution maps and compile the orbital view behind the loading
  // screen. The small target only saves warm-up work; texture sizes stay intact.
