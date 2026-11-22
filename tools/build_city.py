@@ -391,11 +391,6 @@ def river():
             add(B.box("BridgeBaluster", (.3, .3, .7), (side * 11, sy, 1.05), color="#8f8a7c", material=stone))
     for yy in (56, 74):
         add(B.cylinder("BridgePier", 2.0, 3.8, (0, yy, -1.8), segments=12, color="#5f5e56", material=stone))
-    # neon arch over bridge
-    add(B.tube("BridgeNeon", [(-11, 61, 4.2), (-5, 65, 7.2), (0, 65, 7.6), (5, 65, 7.2), (11, 61, 4.2)],
-               .12, "#ff4f8b", neonPink, segments=6))
-    add(B.tube("BridgeNeon2", [(-11, 69, 4.2), (-5, 65, 7.2), (0, 65, 7.6), (5, 65, 7.2), (11, 69, 4.2)],
-               .12, "#53e0e0", neonCyan, segments=6))
     # small boat
     add(B.lathe("Boat", [(0.1, 0), (1.4, .3), (1.8, .8), (1.5, 1.0)], loc=(40, 64, .1), segments=12,
                 color="#5b4a36", material=matte))

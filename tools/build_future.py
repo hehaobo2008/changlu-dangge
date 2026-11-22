@@ -16,6 +16,7 @@ import sys
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import bpy  # noqa: E402
 import blib as B  # noqa: E402
+from model_craft import Batch  # noqa: E402
 
 SEED = 2035
 ROOT = B.ROOT
@@ -1703,37 +1704,32 @@ def side_band(name, pts, z0, z1, off, color, material):
 def community_center():
     obs = []
     z0 = ground_h(-104, 14)
+    from port_architecture import wave_slab_ring, _scale_ring, _bevel_slab, _curtain_band, _curved_wing_canopy, _greenery_bed
+    shell, glass, metal, foliage, solar, warm, cyan = Batch(), Batch(), Batch(), Batch(), Batch(), Batch(), Batch()
     wings = [(-104, 6.0, 27.0, 8.2), (-104, 22.0, 27.0, 8.2), (-117.0, 14.0, 8.2, 22.0)]
     for wi, (wx, wy, ww, wd) in enumerate(wings):
-        lo = rounded_loop(wx, wy, z0, ww, wd, 2.4, 4, 0.0)
-        hi = rounded_loop(wx, wy, z0 + 6.0, ww, wd, 2.4, 4, 0.0)
-        obs.append(loft_rings(f"CommWall{wi}", [lo, hi], "#eee8da", M["white"], smooth=False))
-        roof = rounded_loop(wx, wy, z0 + 6.05, ww * 0.93, wd * 0.93, 2.2, 4, 0.0)
-        verts = roof + [(wx, wy, z0 + 6.05)]
-        faces = [(i, (i + 1) % len(roof), len(roof)) for i in range(len(roof))]
-        obs.append(B._finish(f"CommRoof{wi}", verts, faces, "#78905c", M["foliage"], smooth=False))
-        for i in range(6):
-            if wi == 2:
-                yy = wy - wd * 0.38 + i * (wd * 0.76 / 5)
-                obs.append(B.box(f"CommWin{wi}_{i}", (0.1, 1.7, 2.6),
-                                 (wx + ww / 2 + 0.04, yy, z0 + 3.1),
-                                 color="#26454b", material=M["glass"]))
-            else:
-                xx = wx - ww * 0.38 + i * (ww * 0.76 / 5)
-                yy = wy + (wd / 2 + 0.04) * (1 if wi == 0 else -1)
-                obs.append(B.box(f"CommWin{wi}_{i}", (1.7, 0.1, 2.6), (xx, yy, z0 + 3.1),
-                                 color="#26454b", material=M["glass"]))
-        for i in range(int(ww / 1.5)):
-            xx = wx - ww * 0.45 + i * 1.5
-            obs.append(B.box(f"CommLv{wi}_{i}", (0.12, 0.2, 1.0),
-                             (xx, wy - wd / 2 - 0.15, z0 + 5.15),
-                             color="#b5895d", material=M["wood"]))
-        for i in range(3):
-            for j in range(2):
-                obs.append(B.box(f"CommSolar{wi}_{i}_{j}", (1.7, 1.1, 0.08),
-                                 (wx - ww * 0.25 + i * ww * 0.25, wy - wd * 0.2 + j * wd * 0.35,
-                                  z0 + 6.4), rot=(0.32, 0, 0),
-                                 color="#243f4a", material=M["panel"]))
+        plinth = wave_slab_ring(wx, wy, ww + 1.8, wd + 1.8, n=24, amp=0.14)
+        _bevel_slab(shell, plinth, _scale_ring(plinth, wx, wy, 0.91), z0 - 2.6, z0 + 0.12, z0 + 0.42, "#e3ebe7", "#f8faf5")
+        body = wave_slab_ring(wx, wy, ww, wd, n=24, amp=0.14)
+        _curtain_band(shell, glass, metal, body, _scale_ring(body, wx, wy, 0.94), z0 + 0.42, z0 + 5.75, wi, 61 + wi, 1.9, bay_wood=True)
+        for p in body[::3]:
+            shell.rod((p[0], p[1], z0 + 0.42), (p[0], p[1], z0 + 5.95), 0.13, "#deb076", 4)
+        roof_slab = wave_slab_ring(wx, wy, ww + 0.8, wd + 0.8, n=24, amp=0.14)
+        _bevel_slab(shell, roof_slab, _scale_ring(roof_slab, wx, wy, 0.91), z0 + 5.65, z0 + 5.85, z0 + 6.02, "#f8faf5", "#deb076")
+        _greenery_bed(shell, foliage, _scale_ring(roof_slab, wx, wy, 0.92), z0 + 5.98, height=0.72, seed=wi + 5)
+        _curved_wing_canopy(shell, metal, solar, warm, wx, wy, ww + 2.6, wd + 2.4, z0 + 7.55, arch=1.35, cant=0.65, foot_z=z0 + 6.0)
+        cyan.box((wx, wy - wd * 0.52, z0 + 5.65), (ww * 0.42, 0.10, 0.08), "#bff7ff")
+    for batch, name, mat_obj in [
+        (shell, "CommPavilion", bpy.data.materials.get("Port ceramic, oak and aluminium")),
+        (glass, "CommGlazing", bpy.data.materials.get("Coastal low emissivity glass")),
+        (metal, "CommMetal", M["metal"]),
+        (foliage, "CommFoliage", M["foliage"]),
+        (solar, "CommSolar", M["panel"]),
+        (warm, "CommWarm", M["warm"]),
+        (cyan, "CommCyan", M["cyan"]),
+    ]:
+        if batch.vertices and mat_obj is not None:
+            obs.append(batch.object(name, mat_obj))
     obs.append(B.box("CommDeck", (25, 12, 0.18), (-104, 14.0, z0 + 0.1),
                      color="#c1b49a", material=M["matte"]))
     for i in range(4):
@@ -2719,34 +2715,46 @@ def build_searchlights():
 
 def build_port_buildings():
     obs = []
-    # control bunker
+    from port_architecture import petal_ring, _scale_ring, _bevel_slab, _curtain_band, _curved_wing_canopy, _greenery_bed
+    shell, glass, metal, foliage, solar, warm, cyan = Batch(), Batch(), Batch(), Batch(), Batch(), Batch(), Batch()
+    # sculpted streamlined mission control pavilion
     x, y = 66.0, 70.0
     z = ground_h(x, y)
-    lo = rounded_loop(x, y, z, 17.0, 10.0, 2.0, 4, 0.0)
-    hi = rounded_loop(x, y, z + 5.6, 15.0, 8.5, 2.0, 4, 0.0)
-    obs.append(loft_rings("ControlBldg", [lo, hi], "#e9e3d5", M["white"], smooth=False))
-    roof = rounded_loop(x, y, z + 5.7, 13.6, 7.4, 1.8, 4, 0.0)
-    verts = roof + [(x, y, z + 5.7)]
-    faces = [(i, (i + 1) % len(roof), len(roof)) for i in range(len(roof))]
-    obs.append(B._finish("ControlRoof", verts, faces, "#728b59", M["foliage"], smooth=False))
-    obs.append(B.box("ControlG", (15.0, 0.09, 1.9), (x, y - 5.0, z + 3.4),
-                     color="#29494f", material=M["glass"]))
-    obs.append(B.box("ControlGlow", (15.2, 0.06, 0.10), (x, y - 5.06, z + 4.45),
-                     color="#bff7ff", material=M["cyan"]))
-    obs.append(B.cylinder("ControlDishBase", 0.25, 1.6, (x + 5.5, y + 2.0, z + 6.4),
+    plinth = petal_ring(x, y, 18.6, 11.4, n=22, pin=0.12)
+    _bevel_slab(shell, plinth, _scale_ring(plinth, x, y, 0.90), z - 2.4, z + 0.15, z + 0.44, "#e3ebe7", "#f8faf5")
+    body = petal_ring(x, y, 17.0, 10.0, n=22, pin=0.12)
+    _curtain_band(shell, glass, metal, body, _scale_ring(body, x, y, 0.94), z + 0.44, z + 5.2, 0, 70, 1.9, bay_wood=True)
+    roof_rim = petal_ring(x, y, 17.6, 10.6, n=22, pin=0.12)
+    _bevel_slab(shell, roof_rim, _scale_ring(roof_rim, x, y, 0.91), z + 5.15, z + 5.32, z + 5.50, "#f8faf5", "#deb076")
+    _greenery_bed(shell, foliage, _scale_ring(roof_rim, x, y, 0.92), z + 5.46, height=0.62, seed=70)
+    _curved_wing_canopy(shell, metal, solar, warm, x, y, 19.6, 11.8, z + 7.05, arch=1.3, cant=0.55, foot_z=z + 5.48)
+    cyan.box((x, y - 5.15, z + 5.20), (14.4, 0.08, 0.10), "#bff7ff")
+    for batch, name, mat_obj in [
+        (shell, "ControlShell", bpy.data.materials.get("Port ceramic, oak and aluminium")),
+        (glass, "ControlGlazing", bpy.data.materials.get("Coastal low emissivity glass")),
+        (metal, "ControlMetal", M["metal"]),
+        (foliage, "ControlFoliage", M["foliage"]),
+        (solar, "ControlSolar", M["panel"]),
+        (warm, "ControlWarm", M["warm"]),
+        (cyan, "ControlCyan", M["cyan"]),
+    ]:
+        if batch.vertices and mat_obj is not None:
+            obs.append(batch.object(name, mat_obj))
+    obs.append(B.cylinder("ControlDishBase", 0.25, 1.5, (x - 10.2, y + 1.4, z + 4.15),
                           segments=8, color="#b8b1a1", material=M["metal"]))
     obs.append(B.lathe("ControlDish", [(0.1, 0.0), (0.75, 0.15), (1.55, 0.8), (1.9, 1.35)],
-                       loc=(x + 5.5, y + 2.0, z + 7.2), rot=(0.4, 0, 0.3), segments=16,
+                       loc=(x - 10.2, y + 1.4, z + 4.9), rot=(0.4, 0, 0.3), segments=16,
                        color="#eae4d6", material=M["white"]))
-    obs.append(B.cylinder("ControlRadar", 0.14, 1.6, (x - 4.5, y + 2.5, z + 7.0),
+    obs.append(B.cylinder("ControlRadar", 0.14, 1.4, (x - 7.6, y + 0.6, z + 4.1),
                           segments=6, color="#a8a294", material=M["metal"]))
-    obs.append(B.box("ControlRadarBar", (2.6, 0.12, 0.12), (x - 4.5, y + 2.5, z + 7.7),
+    obs.append(B.box("ControlRadarBar", (2.4, 0.12, 0.12), (x - 7.6, y + 0.6, z + 4.8),
                      rot=(0, 0, 0.5), color="#d3ccbb", material=M["metal"]))
     obs.extend(sign_panel("ControlSign", "xinghe", x, y - 5.15, z + 2.0, 0.0, 4.6, 1.5, glow=True))
-    # a low annex
-    obs.append(B.box("ControlAnnex", (7.0, 5.0, 3.2), (x - 9.0, y + 1.0, z + 1.6),
-                     color="#ded7c8", material=M["white"], bevel=0.08))
-    obs.append(B.box("ControlAnnexG", (6.0, 0.08, 1.0), (x - 9.0, y - 1.55, z + 2.0),
+    # sleek curved annex
+    annex = petal_ring(x - 9.2, y + 1.0, 7.2, 5.2, n=16, pin=0.10)
+    obs.append(loft_rings("ControlAnnex", [[(a, b, z) for a, b in annex], [(a, b, z + 3.4) for a, b in annex]],
+                          "#e9e3d5", M["white"], smooth=True))
+    obs.append(B.box("ControlAnnexG", (5.6, 0.08, 1.2), (x - 9.2, y - 1.58, z + 2.0),
                      color="#28484e", material=M["glass"]))
     # port gateway with the spaceport sign
     gx, gy = 76.0, 58.0
@@ -2811,25 +2819,31 @@ def build_port_buildings():
 def low_lab():
     x, y = 26.0, 60.0
     z = ground_h(x, y)
-    lo = rounded_loop(x, y, z, 20.0, 12.0, 2.6, 4, 0.0)
-    hi = rounded_loop(x, y, z + 7.6, 18.2, 10.4, 2.4, 4, 0.0)
-    obs = [loft_rings("LabWall", [lo, hi], "#eee9dc", M["white"], smooth=False)]
-    roof = rounded_loop(x, y, z + 7.7, 17.0, 9.4, 2.2, 4, 0.0)
-    verts = roof + [(x, y, z + 7.7)]
-    faces = [(i, (i + 1) % len(roof), len(roof)) for i in range(len(roof))]
-    obs.append(B._finish("LabRoof", verts, faces, "#71895a", M["foliage"], smooth=False))
-    obs.append(B.box("LabGlass", (15.0, 0.08, 2.5), (x, y - 6.1, z + 3.4),
-                      color="#27474d", material=M["glass"]))
-    obs.append(B.box("LabGlow", (15.2, 0.06, 0.08), (x, y - 6.15, z + 4.7),
-                      color="#bff7ff", material=M["cyan"]))
-    for i in range(6):
-        obs.append(B.box("LabLouvre", (0.14, 0.2, 3.4), (x - 7 + i * 2.8, y + 6.05, z + 4.6),
-                          color="#b78c5f", material=M["wood"]))
-    for i in range(4):
-        for j in range(2):
-            obs.append(B.box("LabSolar", (2.2, 1.5, 0.08),
-                              (x - 5.4 + i * 3.6, y - 2.2 + j * 4.0, z + 8.0),
-                              rot=(0.28, 0, 0), color="#263f4a", material=M["panel"]))
+    from port_architecture import petal_ring, _scale_ring, _bevel_slab, _curtain_band, _curved_wing_canopy, _greenery_bed
+    shell, glass, metal, foliage, solar, warm, cyan = Batch(), Batch(), Batch(), Batch(), Batch(), Batch(), Batch()
+    plinth = petal_ring(x, y, 21.8, 13.6, n=24, pin=0.14)
+    _bevel_slab(shell, plinth, _scale_ring(plinth, x, y, 0.90), z - 2.6, z + 0.15, z + 0.44, "#e3ebe7", "#f8faf5")
+    body = petal_ring(x, y, 20.0, 12.0, n=24, pin=0.14)
+    _curtain_band(shell, glass, metal, body, _scale_ring(body, x, y, 0.94), z + 0.44, z + 6.9, 1, 26, 1.9, bay_wood=True)
+    for p in body[::3]:
+        shell.rod((p[0], p[1], z + 0.44), (p[0], p[1], z + 7.1), 0.14, "#deb076", 4)
+    roof_rim = petal_ring(x, y, 20.8, 12.6, n=24, pin=0.14)
+    _bevel_slab(shell, roof_rim, _scale_ring(roof_rim, x, y, 0.91), z + 6.85, z + 7.02, z + 7.20, "#f8faf5", "#deb076")
+    _greenery_bed(shell, foliage, _scale_ring(roof_rim, x, y, 0.92), z + 7.16, height=0.78, seed=26)
+    _curved_wing_canopy(shell, metal, solar, warm, x, y, 22.8, 14.2, z + 8.85, arch=1.6, cant=0.8, foot_z=z + 7.18)
+    cyan.box((x, y - 6.1, z + 6.95), (14.4, 0.08, 0.10), "#bff7ff")
+    obs = []
+    for batch, name, mat_obj in [
+        (shell, "LabShell", bpy.data.materials.get("Port ceramic, oak and aluminium")),
+        (glass, "LabGlazing", bpy.data.materials.get("Coastal low emissivity glass")),
+        (metal, "LabMetal", M["metal"]),
+        (foliage, "LabFoliage", M["foliage"]),
+        (solar, "LabSolar", M["panel"]),
+        (warm, "LabWarm", M["warm"]),
+        (cyan, "LabCyan", M["cyan"]),
+    ]:
+        if batch.vertices and mat_obj is not None:
+            obs.append(batch.object(name, mat_obj))
     for i in range(4):
         a = math.tau * i / 4 + 0.6
         obs.extend(tree_future(f"LabTree{i}", x + 9.5 * math.cos(a), y + 7.0 * math.sin(a),
