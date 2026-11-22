@@ -39,6 +39,7 @@ async function open(options={},url=base+'/'){
   return p;
 }
 async function step(p,seconds){await p.evaluate(seconds=>{const a=__changlu;let left=seconds;while(left>1e-8){const dt=Math.min(1/60,left);a.step(dt);left-=dt}a.render()},seconds)}
+async function completeLaunch(p,tap=false){await p.locator('#launchBtn')[tap?'tap':'click']();await step(p,26.5);}
 async function place(p,progress){await p.evaluate(t=>{__changlu.setProgress(t);__changlu.settle(24);__changlu.step(0)},progress)}
 async function shot(p,name){await p.evaluate(()=>__changlu.render());await p.waitForTimeout(750);await p.screenshot({path:path.join(out,name+'.png')})}
 async function start(p){
@@ -101,9 +102,9 @@ async function islandMap(p){
       const separate=rects.every((r,i)=>rects.slice(i+1).every(s=>
         r.right<=s.left||s.right<=r.left||r.bottom<=s.top||s.bottom<=r.top));
       const visible=buttons.every(b=>{
-        const z=a.zones[b.dataset.zone].spec.center;
+        const pos=a.zones[b.dataset.zone].group.position;
         return [-150,150].every(x=>[-150,150].every(d=>{
-          const v=a.camera.position.clone().set(x,0,z+d).project(a.camera);
+          const v=a.camera.position.clone().set(pos.x+x,pos.y,pos.z+d).project(a.camera);
           return Math.abs(v.x)<1&&Math.abs(v.y)<1&&Math.abs(v.z)<1;
         }));
       });
@@ -114,7 +115,7 @@ async function islandMap(p){
   await p.setViewportSize(original);await p.waitForFunction(r=>__changlu.camera.aspect===r.width/r.height,original);
   await step(p,.1);
   const point=await p.evaluate(()=>{
-    const a=__changlu,v=a.camera.position.clone().set(55,0,a.zones.city.spec.center).project(a.camera);
+    const a=__changlu,pos=a.zones.city.group.position,v=a.camera.position.clone().set(pos.x+40,pos.y,pos.z).project(a.camera);
     return {x:(1+v.x)*innerWidth/2,y:(1-v.y)*innerHeight/2};
   });
   await p.mouse.click(point.x,point.y);await step(p,2.3);
@@ -193,13 +194,11 @@ async function arrivals(p){
       await p.locator('#cardTitle').focus();await p.keyboard.press('ArrowDown');
       await p.mouse.move(40,350);await p.mouse.wheel(0,240);await step(p,.4);
       check(await p.evaluate(()=>__changlu.state.modal?.id==='ticketLayer'),'Forward navigation keeps the boarding pass open at the terminus');
-      await p.locator('#shelveTicket').click();
-      check(await p.locator('#boardingReturn').evaluate(n=>!n.hidden&&document.activeElement===n),'Shelving the boarding pass exposes a focused return from the spaceport');
-      await p.locator('#boardingReturn').click();await p.locator('#ticketFront').click();
+      check(await p.locator('#shelveTicket').isHidden(),'Boarding pass hides intermediate shelve button');
       await p.locator('#prevLetter').click();await p.locator('#nextLetter').click();
       check(await p.locator('#wishInput').inputValue()==='等星河归来，再聚一桌。','Draft survives archive navigation');
       check(await p.evaluate(()=>__changlu.state.collected.size)===5,'All five tickets read');
-      await p.locator('#skipFinale').click();await mode(p,'ended');await ending(p,'等星河归来，再聚一桌。');
+      await completeLaunch(p,false);await mode(p,'ended');await ending(p,'等星河归来，再聚一桌。');
       await lastSpread(p);check((await p.locator('.home-line').first().innerText()).includes('已留住'),'Kept quote remains marked');await p.locator('#closeCodex').click();
     }
   }
@@ -211,8 +210,8 @@ async function arrivals(p){
   await advanceWheel(p,201);await step(p,.15);
   const beforeBook=await p.evaluate(()=>__changlu.state.progress);await p.locator('#memoryBtn').click();
   await step(p,1.8);check(await p.evaluate(()=>__changlu.state.progress)===beforeBook,'Opening the folio preserves the return position');
-  await p.locator('.folio-object').focus();await p.keyboard.press('Enter');
-  check(await p.locator('.folio-object').getAttribute('aria-pressed')==='true','Keyboard flips the archived object');
+  await p.locator('.folio-artifact svg').waitFor({state:'visible'});
+  check(await p.locator('.folio-artifact svg').count()===1&&await p.locator('.folio-object,.detail-tags').count()===0,'Book displays static artifact without flip or details');
   await p.keyboard.press('Escape');check(await p.locator('#memoryBtn').evaluate(n=>n===document.activeElement),'Archive restores focus');
   await p.evaluate(()=>__changlu.automaticLetters(false));const movement=[];
   for(const at of [.13,.34,.555,.775,.945]){
@@ -337,7 +336,7 @@ async function mobile(p,name,{touch=false,flight=false}={}){
   if(touch){
     await openMap(p,true);await step(p,.3);
     const point=await p.evaluate(()=>{
-      const a=__changlu,v=a.camera.position.clone().set(40,0,a.zones.town.spec.center).project(a.camera);
+      const a=__changlu,pos=a.zones.town.group.position,v=a.camera.position.clone().set(pos.x+40,pos.y,pos.z).project(a.camera);
       return {x:(v.x+1)*innerWidth/2,y:(1-v.y)*innerHeight/2};
     });
     await p.touchscreen.tap(point.x,point.y);await step(p,2.3);
@@ -355,7 +354,7 @@ async function mobile(p,name,{touch=false,flight=false}={}){
     await p.evaluate(()=>new Promise(done=>requestAnimationFrame(()=>requestAnimationFrame(done))));
     await step(p,1);await p.waitForTimeout(550);
     check(await p.evaluate(()=>__changlu.state.progress>.128&&!__changlu.state.modal&&document.querySelector('#ticketLayer').dataset.side==='front'),'A fresh upward swipe continues without accidentally flipping the ticket');
-    await p.locator('#memoryBtn').tap();await p.locator('.folio-object').tap();await p.locator('#closeCodex').tap();await p.evaluate(()=>__changlu.receiveLetter());await step(p,1.8);await p.waitForTimeout(550);
+    await p.locator('#memoryBtn').tap();await p.locator('.folio-artifact svg').waitFor({state:'visible'});await p.locator('#closeCodex').tap();await p.evaluate(()=>__changlu.receiveLetter());await step(p,1.8);await p.waitForTimeout(550);
   }
   await p.locator('#ticketFront').tap();await p.waitForTimeout(750);await fits(p,'#ticketLayer',name+' back');
   check(await p.locator('#ticketLayer').getAttribute('data-side')==='back'&&await p.locator('#ticketFront').getAttribute('aria-hidden')==='true'&&await p.evaluate(()=>__changlu.state.modal?.id)==='ticketLayer'&&await p.locator('#cardTitle').innerText()===letters[0].backText,name+' touch flips directly to prose');
@@ -370,7 +369,7 @@ async function mobile(p,name,{touch=false,flight=false}={}){
       for(const offset of [16,42,70,100])await driver.send('Input.dispatchTouchEvent',{type:'touchMove',touchPoints:[{x,y:y-offset}]});
       await driver.send('Input.dispatchTouchEvent',{type:'touchEnd',touchPoints:[]});await p.waitForTimeout(80);await step(p,1);
       check(await p.evaluate(()=>!__changlu.state.modal&&__changlu.state.progress>.342),'Fresh upward swipe continues without a button or accidental flip');
-      await p.waitForTimeout(600);await p.locator('#memoryBtn').tap();await p.locator('.folio-object').tap();await p.locator('#closeCodex').tap();await p.evaluate(()=>__changlu.receiveLetter());await step(p,1.8);
+      await p.waitForTimeout(600);await p.locator('#memoryBtn').tap();await p.locator('.folio-artifact svg').waitFor({state:'visible'});await p.locator('#closeCodex').tap();await p.evaluate(()=>__changlu.receiveLetter());await step(p,1.8);
     }
     await p.locator('#ticketFront').tap();await fits(p,'#ticketLayer',name+' rail reverse '+idx);await p.locator('#cardClose').tap();
   }
@@ -383,9 +382,9 @@ async function mobile(p,name,{touch=false,flight=false}={}){
   await fits(p,'#launchBtn',name+' launch');await shot(p,name+'-boarding');
   await p.locator('[data-wish]').nth(1).tap();const message=letters[4].replies[1];
   check(await p.locator('#wishInput').inputValue()===message,name+' preset fills same message field');
-  await p.locator('#skipFinale').tap();await mode(p,'ended');await ending(p,message);await replay(p);
+  await completeLaunch(p,true);await mode(p,'ended');await ending(p,message);await replay(p);
   if(flight)await fullFlight(p,name);
-  await place(p,1);await step(p,.6);await p.locator('#ticketFront').tap();await p.locator('#wishInput').fill('');await p.locator('#skipFinale').tap();await mode(p,'ended');await ending(p,'');
+  await place(p,1);await step(p,.6);await p.locator('#ticketFront').tap();await p.locator('#wishInput').fill('');await completeLaunch(p,true);await mode(p,'ended');await ending(p,'');
 }
 async function deployment(){
   const p=await open({viewport:{width:1280,height:800},reducedMotion:'reduce'},base+'/nested/');
@@ -401,7 +400,7 @@ async function deployment(){
   await start(offline);await showTicket(offline,.325);await offline.locator('#ticketFront').click();
   check(await offline.locator('#cardBody').innerText()===letters[1].body,'Offline one-click ticket text works');
   await offline.locator('#cardClose').click();await place(offline,1);await step(offline,.6);
-  await offline.locator('#ticketFront').click();await offline.locator('#wishInput').fill('离线也有归途');await offline.locator('#skipFinale').click();await ending(offline,'离线也有归途');
+  await offline.locator('#ticketFront').click();await offline.locator('#wishInput').fill('离线也有归途');await completeLaunch(offline,false);await ending(offline,'离线也有归途');
   await shot(offline,'offline-ending');await close(offline);
 }
 async function recovery(){

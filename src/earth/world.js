@@ -57,7 +57,6 @@ export async function makeEarthWorld(renderer,launchSky){
     float cloudShadow=texture2D(cloudMap,shadowUV,1.0).r;
     vec3 color=base*light*(1.-.23*smoothstep(.14,.8,cloudShadow));
     float terminator=dot(n,sun);
-    color+=vec3(.24,.075,.027)*exp(-abs(terminator)*14.);
     float landMask=(1.-water)*smoothstep(.045,.18,luminance);
     float towns=smoothstep(.68,.84,fbm(localP*780.))*smoothstep(.52,.68,fbm(localP*65.));
     color+=vec3(.85,.47,.18)*landMask*towns*(1.-smoothstep(-.18,.12,terminator));
@@ -102,7 +101,6 @@ export async function makeEarthWorld(renderer,launchSky){
      vec3 col=mix(vec3(.72,.79,.83),vec3(.99,.99,.97),smoothstep(.06,.65,density))*light*(1.15-lower*.13);
      float thin=1.-smoothstep(.1,.7,density);
      col=mix(col,vec3(.22,.31,.39),thin*.15+lower*.12);
-     col+=vec3(.16,.057,.02)*exp(-abs(dot(normal,sun))*12.);
      col=floor(col*120.+.5)/120.;
      float limb=pow(1.-max(0.,dot(normal,view)),4.);
      col=mix(col,vec3(.12,.27,.37),limb*.32+haze*.25);
@@ -130,7 +128,7 @@ export async function makeEarthWorld(renderer,launchSky){
      optical+=density;day+=density*(.22+.78*max(0.,dot(normalize(p),sun)));
     }
     float glow=(1.-exp(-optical*.018))*day/max(.001,optical);
-    float edge=exp(-abs(dot(normalize(worldP),sun))*5.0);gl_FragColor=vec4(mix(vec3(.14,.37,.59),vec3(.91,.42,.19),edge*.70),glow*1.12);
+    gl_FragColor=vec4(vec3(.16,.42,.72),glow*1.05);
    }`}));
  atmosphere.name='Thin atmosphere';atmosphere.scale.setScalar(RADIUS+65);atmosphere.userData.noNormal=true;scene.add(atmosphere);
  const sky=launchSky.group.clone(true);

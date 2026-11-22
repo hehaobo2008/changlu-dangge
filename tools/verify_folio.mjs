@@ -45,12 +45,14 @@ try{
       const {x,y,width,height}=el.getBoundingClientRect(),heading=el.querySelector('h2').getBoundingClientRect();
       const panel=getComputedStyle(el,'::before');
       return {cx:x+width/2-innerWidth/2,cy:y+height/2-innerHeight/2,heading:heading.x+heading.width/2-innerWidth/2,
-        compact:el.dataset.compact,panel:panel.content,bar:parseFloat(panel.borderLeftWidth)};
+        compact:el.dataset.compact,panel:panel.content,bar:parseFloat(panel.borderLeftWidth),bg:parseFloat(panel.opacity)};
     });
     assert.equal(box.compact,String(stage==='corner'));
-    if(stage==='corner'){assert(box.bar>0&&box.panel!=='none'&&box.cx<0&&box.cy>0);return;}
-    assert.equal(box.panel,'none');
-    if(stage==='center')assert([box.cx,box.cy,box.heading].every(n=>Math.abs(n)<2),JSON.stringify(box));
+    assert.equal(box.bar,0);
+    assert.notEqual(box.panel,'none');
+    if(stage==='corner'){assert(box.bg>.85&&box.cx<0&&box.cy>0,JSON.stringify(box));return;}
+    if(stage==='moving'){assert(box.bg>.05&&box.bg<.98,JSON.stringify(box));return;}
+    if(stage==='center')assert(box.bg<.05&&[box.cx,box.cy,box.heading].every(n=>Math.abs(n)<2),JSON.stringify(box));
   }
   const url=phone?pathToFileURL(path.join(dist,'山河织路-离线单文件.html')).href:'http://127.0.0.1:'+server.address().port+'/';
   if(phone)await context.route(/^https?:/,route=>route.abort());
@@ -58,13 +60,17 @@ try{
   await page.waitForTimeout(1700);await shot('loading');
   await page.waitForFunction(()=>window.__ready||window.__error,null,{timeout:180000});
   assert.equal(await page.evaluate(()=>window.__error),null);await phase('cover');await page.waitForTimeout(400);await shot('cover');
+  const coverBox=await page.locator('.book-cover').boundingBox();
+  assert(coverBox&&Math.abs(coverBox.x+coverBox.width/2-(phone?390:1366)/2)<20&&Math.abs(coverBox.y+coverBox.height/2-(phone?844:850)/2)<20,'Cover not centered: '+JSON.stringify(coverBox));
   console.log(prefix,'loaded');
   if(phone)await click('#openFolio');else await page.keyboard.press('Enter');
   await phase('background');await shot('background');
   if(phone)await click('#openFolio');else await page.keyboard.press('Space');
+  if(!phone){await page.waitForTimeout(420);await shot('turning');}
   await phase('spread');await shot('spread');await mode('travel');await page.waitForTimeout(500);await shot('entry-0');
   if(!phone){await page.mouse.wheel(0,130);await page.waitForFunction(()=>__changlu.state.progress>.1001);}
   if(phone){assert.equal(await page.locator('#hud .hud-actions>button:visible').count(),4);await click('#moreBtn');await shot('more');await click('[data-tool=infoBtn]');await click('#infoClose');}
+  assert.equal(await page.locator('#detailBtn,#detailPanel,#encounter,#actionProp,#ticketFlipHint,#skipFinale,#folioEnter').count(),0);
   await page.evaluate(()=>{__changlu.freeze();__changlu.automaticLetters(false);});
   for(let i=0;i<5;i++){
     if(i){await click('#timeline [data-ch="'+i+'"]');await step(2.4);}
@@ -100,25 +106,36 @@ try{
       }
       await page.setViewportSize({width:390,height:844});await place(progressAtTime(travelTime(entry[0])+10.5));
     }
-    if(phone)await click('#moreBtn');
-    await click(phone?'[data-tool=detailBtn]':'#detailBtn');await page.waitForTimeout(350);await shot('detail-'+i+'a');await click('#detailNext');await page.waitForTimeout(350);await shot('detail-'+i+'b');await click('#detailClose');
     await click('#memoryBtn');await mode('codex');assert.equal(await page.locator('#codex').getAttribute('data-page'),String(i));
-    assert((await page.locator('#folioContent').innerText()).includes(acts[i].details[1].name+' · 已读'));
-    await shot('folio-'+i);await click('.folio-object');await page.waitForTimeout(540);await shot('folio-back-'+i);
+    assert.equal(await page.locator('.detail-tags,.folio-object,#folioEnter').count(),0);
+    if(i===0){
+      assert.equal(await page.locator('#folioYear').innerText(),'山河村');
+      assert.equal(await page.locator('#closeCodex').innerText(),'退出');
+      assert.equal(await page.locator('#codexOverview').isVisible(),true);
+      if(!phone){
+        const arrowAligned=await page.evaluate(()=>{
+          const box=s=>document.querySelector(s).getBoundingClientRect();
+          const spread=box('.codex-spread'),prev=box('#folioPrev'),next=box('#folioNext');
+          const midY=spread.top+spread.height/2;
+          return Math.abs(prev.top+prev.height/2-midY)<12&&Math.abs(next.top+next.height/2-midY)<12&&prev.right<spread.left&&next.left>spread.right;
+        });
+        assert(arrowAligned,'Codex prev/next arrows must sit cleanly centered beside book spread');
+      }
+    }
+    const artBox=await page.locator('.folio-artifact svg').boundingBox();assert(artBox&&artBox.height>40);
+    await shot('folio-'+i);
+    if(!phone&&i===1){await click('#folioPrev');await page.waitForTimeout(260);await shot('codex-turn');await page.waitForTimeout(550);await click('#folioNext');await page.waitForTimeout(750);}
     if(i===0){await click('.transcript summary');await click('.transcript button');await page.waitForFunction(()=>voiceSamples.at(-1)?.currentTime>.3);}
     await click('#closeCodex');
     await place(stops[i]);await page.evaluate(()=>__changlu.automaticLetters(true));await step(4.1);
     await page.waitForTimeout(1350);await shot('ticket-'+i);
-    if(i===1||i===4){
-      assert.equal(await page.locator('#actionProp').isVisible(),false);
+    assert.equal(await page.locator('#shelveTicket').isVisible(),i<4);
+    if(i===1){
       const grip=page.locator('#ticketFront [data-grip]');
-      if(i===1){
-        assert.equal(await grip.getAttribute('fill'),'transparent');
-        assert.equal(await page.locator('#ticketFront svg text').evaluateAll(ts=>ts.filter(t=>t.textContent.replace(/\s/g,'')==='副券').length),1);
-      }else{
-        const scan=await grip.boundingBox(),seat=await page.locator('#ticketFront svg text').filter({hasText:'08A'}).last().boundingBox();
-        assert(scan&&seat&&(scan.x+scan.width<=seat.x||scan.y+scan.height<=seat.y||seat.y+seat.height<=scan.y));
-      }
+      assert.equal(await grip.getAttribute('fill'),'transparent');
+      assert.equal(await page.locator('#ticketFront svg text').evaluateAll(ts=>ts.filter(t=>t.textContent.replace(/\s/g,'')==='副券').length),1);
+    }else if(i===4){
+      assert.equal(await page.locator('#ticketFront [data-grip]').count(),0);
     }
     if(!phone)await page.keyboard.press('r');else await click('#ticketFront');
     assert.equal(await page.locator('#ticketLayer').getAttribute('data-side'),'back');await page.waitForTimeout(500);await shot('letter-'+i);
@@ -129,9 +146,9 @@ try{
   assert.deepEqual([...new Set(fades)],acts.map(act=>act.title));
   await mode('ended');await page.waitForTimeout(1200);await shot('earth');await click('#closeEarth');await page.waitForTimeout(1250);await shot('rewind');await mode('codex');
   assert.equal(await page.locator('#codex').getAttribute('data-page'),'0');await click('#bookmarks button:last-child');await page.waitForTimeout(550);await shot('final');assert((await page.locator('#folioContent').innerText()).includes('愿稻穗在月面抽绿'));
-  await page.keyboard.press('ArrowLeft');await click('#folioEnter');await mode('travel');await step(.05);
+  await page.keyboard.press('ArrowLeft');await click('#folioImage');await mode('travel');await step(.05);
   assert.equal(await page.evaluate(()=>__changlu.state.chapter),4);assert.deepEqual(errors,[]);
-  console.log(prefix,'five acts, ten details, five tickets, rewind, re-entry OK');await context.close();
+  console.log(prefix,'five acts, five tickets, rewind, re-entry OK');await context.close();
  }
 }finally{await browser.close();await new Promise(r=>server.close(r));}
 

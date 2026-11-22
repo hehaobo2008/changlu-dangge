@@ -68,7 +68,6 @@ export function objectTicket(kind,interactive=false){
         <g fill="#173a4b">${bars(31,281,235,31)}</g>
         <text x="292" y="300" fill="#52717c" font-family="Consolas,monospace" font-size="13">SH001 / EAR-XHE / 08A</text>
         <text x="292" y="319" fill="#52717c" font-size="11">2049.09.01 · 星河号 · 稻种培育任务</text>
-        ${interactive?'<g data-grip=""><rect x="473" y="282" width="90" height="32" rx="4" fill="#245460"/><text x="518" y="304" text-anchor="middle" fill="#e7fffa" font-size="16">扫描</text></g>':''}
         <g fill="#52717c" font-size="13"><text x="612" y="103">登船凭证</text><text x="612" y="166">舱门 / GATE</text><text x="612" y="242">座位 / SEAT</text></g>
         <text x="612" y="134" fill="#173a4b" font-size="21">小满</text><text x="752" y="134" text-anchor="end" fill="#52717c" font-size="12">XIAOMAN</text>
         <g fill="#173a4b" font-family="Consolas,monospace" font-size="36"><text x="612" y="207">03</text><text x="612" y="284">08A</text></g>

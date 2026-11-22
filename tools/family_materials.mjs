@@ -16,7 +16,6 @@ const opening='1983 年秋，山河村的周桂芳收稻时挑出抗风老晚稻
 const dialogue=lines=>lines.map(([who,line])=>'**'+who+'**　'+line).join('\n\n');
 const chapters=acts.map((act,i)=>{
   const letter=letters[i],scene=scenes[i];
-  const details=act.details.map(d=>'**'+d.name+'**　'+d.story).join('\n\n');
   return `## 第${['一','二','三','四','五'][i]}幕　${act.title}
 
 ${act.heading}　｜　${act.cast}
@@ -41,11 +40,7 @@ ${dialogue(act.dialogue)}
 
 背面　${letter.sender}留给${letter.to}：「${act.quote}」
 
-${act.story}
-
-### 两处可探访的细节
-
-${details}`;
+${act.story}`;
 }).join('\n\n');
 
 save('一穗千里-剧情与互动稿.md',`# ${title}
@@ -60,7 +55,7 @@ ${roles}
 
 ## 开卷
 
-加载时，书名随进度点亮，进度卡显示操作引导。轻点旧册封面翻开第 1 页，也可按回车。左页为“四代人与一脉稻种”人物时间导览：
+加载时，书名随进度点亮，以星空山海柔雾画面为底。轻点书封翻开第 1 页，也可按回车。左页为“四代人与一脉稻种”人物时间导览：
 
 - **周桂芳（外婆）**：1983 山河村 · 种田选穗留种
 - **林穗（妈妈）**：1996 县城东街 · 县粮油店工作安家
@@ -71,7 +66,7 @@ ${roles}
 
 ${opening}
 
-再翻一页，书页上的田埂晨景与第一幕引言并列呈现，随后场景放大进入山河村。每幕的时间、地点和背景介绍在画面中央渐显，滑动后收至左下角，换作一句凝练短题。可用滚轮、轻滑、方向键或自动漫游前行。沿途双人对白在漫游与图鉴中统一使用同一段录音与文本，全程带同步字幕。旧物可按提示操作，也可轻点或按 R 翻面。每幕两处细节可在现场或图鉴阅读。
+再翻一页，以弧形拟真翻页揭开田埂晨景与第一幕引言，随后场景放大进入山河村。每幕的时间、地点和背景介绍在画面中央渐显，滑动后平滑收至左下角模糊底层，换作一句凝练短题。可用滚轮、轻滑、方向键或自动漫游前行。沿途双人对白在漫游与书中统一使用同一段录音与文本，全程带同步字幕。漫游中遇见的五件旧物可按提示操作或按 R 翻看背面故事。
 
 ${chapters}
 
@@ -81,9 +76,9 @@ ${chapters}
 
 ${letters[4].replies.map(line=>'- '+line).join('\n')}
 
-星河号升空，镜头离开星港、转向地球。画面上出现「${familyNote}」与「${endingText}」，已填写的留言也随之出现。继续滑动或轻点收卷，书页从终章倒翻回第 1 幕，进入《山河图鉴》。
+星河号升空，镜头离开星港、转向地球。画面上出现「${familyNote}」与「${endingText}」，已填写的留言也随之出现。继续滑动或轻点「收卷入书」，书页从终章连翻五页倒翻回第 1 幕。
 
-图鉴有五个年代和一个终章。左页实景可重返该幕场景，右页可翻看旧物、读两处细节、重听本幕对白。终章「五件旧物 · 五句留字」把五句纸背留字依年代排在一起，标出沿途留住的句子，并收录登船前写下的话。可选「再走一程」或「五岛展卷」。`);
+书内有五个年代和一个终章。左页实景可进入该幕场景，右页静态陈列重要旧物、背景故事与本幕对白。终章「五件旧物 · 五句留字」把五句纸背留字依年代排在一起，标出沿途留住的句子，并收录登船前写下的话。可选「再走一程」或「五岛展卷」。`);
 
 const mast='<div class="mast"><b>山河织路</b><span>一穗千里</span></div>';
 const photo=(url,alt)=>'<img src="'+url+'" alt="'+alt+'">';
@@ -110,10 +105,10 @@ const pdfCss='article{width:210mm;height:297mm;padding:14mm 15mm;font-size:14px}
 const rows=acts.map((a,i)=>`<div class="row"><b>${years[i]}</b><div><h3>${a.title}</h3><p>${a.line}　${a.object}</p></div></div>`).join('');
 const design=[
   `<article>${mast}<h2>一穗千里</h2><small>一家四代的归途 · 1983—2049</small>${photo(plate(0),'山河村秋晨').replace('<img','<img class="hero"')}<p>外婆周桂芳把老晚稻留种，把字条塞进女儿林穗的书包；女儿宁宁考入农学院改良出高产抗倒伏“山河稻”；六十六年后，宁宁守在星河港温室做对照培育，小满带着另一份稻秧乘星河号赴月种植。五件纸上旧物记下了每一程。</p><blockquote>${familyNote}</blockquote><div class="rows">${rows}</div>${foot('设计说明',1)}</article>`,
-  `<article>${mast}<h2>从纸上读到路上</h2><div class="pair">${fig(detail(0,1),'山河村 · 田埂上挑选谷种')}${fig(detail(4,0),'星河港 · 发射场旁的育苗温室')}</div><div class="work-note"><h3>翻开旧册</h3><p>第 1 页左页列出四代人物时间导览，右页交代总背景；再翻一页放大书页实景进入第一幕。每幕背景介绍在画面中央渐显，滑动后收至左下角换作短题。</p><h3>听对白，读票背</h3><p>漫游与《山河图鉴》统一播放同一套双人对白并同步显示字幕。五件旧物分别展开折角、撕券、剪票、刷证与扫码，观众可翻面读故事并留住喜爱的句子。</p><h3>地球与留字</h3><p>星河号离台后回望地球。观众在登船牌上留下的话随画面出现，收卷后倒翻入《山河图鉴》，终章将它和五件旧物上的留字收在一起。</p></div><div class="pair" style="margin-top:7mm">${fig(screen('front-1'),'沿齿线撕下副券')}${fig(screen('record'),'终章 · 五件旧物与留字')}</div><div class="note"><h3>画面与声音</h3><p>${credits} 漫游声场、翻页声与人物对白按场景切换。</p></div>${foot('设计说明',2)}</article>`
+  `<article>${mast}<h2>从纸上读到路上</h2><div class="pair">${fig(detail(0,1),'山河村 · 田埂上挑选谷种')}${fig(detail(4,0),'星河港 · 发射场旁的育苗温室')}</div><div class="work-note"><h3>翻开书页</h3><p>第 1 页左页列出四代人物时间导览，右页交代总背景；再以拟真翻页揭开实景进入第一幕。每幕背景介绍在画面中央渐显，滑动后平滑收至左下角模糊底层并换作短题。</p><h3>听对白，读旧物</h3><p>漫游与书中统一播放同一套双人对白并同步显示字幕。沿途遇见的五件旧物分别展开折角、撕券、剪票、刷证与扫码，观众可翻面读故事并留住喜爱的句子。</p><h3>地球与留字</h3><p>星河号离台后回望地球。观众在登船牌上留下的话随画面出现，收卷后连翻五页入书，终章将它和五件旧物上的留字收在一起。</p></div><div class="pair" style="margin-top:7mm">${fig(screen('front-1'),'沿齿线撕下副券')}${fig(screen('record'),'终章 · 五件旧物与留字')}</div><div class="note"><h3>画面与声音</h3><p>${credits} 漫游声场、翻页声与人物对白按场景切换。</p></div>${foot('设计说明',2)}</article>`
 ];
 save('design.html',html(title+' · 设计说明',pdfCss,design.join('\n')));
 
 const flowCss='@page{size:A4 landscape;margin:0}article{width:297mm;height:210mm;padding:11mm 14mm;font-size:16px}.cells{margin:7mm 0}.cells img{height:36mm}.cells h3{margin:2mm 0}.cells p{margin-top:1mm}.line{border-top:1px solid #ae8d74;padding-top:4mm;margin-top:4mm}';
 const stops=acts.map((a,i)=>`<div>${photo(plate(i),a.title)}<small>${years[i]}</small><h3>${a.title}</h3><p>${a.object}<br>${scenes[i].drag}</p></div>`).join('');
-save('flow.html',html(title+' · 交互流程',flowCss,`<article>${mast}<h2>从翻书到收卷</h2><p>轻点旧册 → 阅读人物导览与总背景 → 翻至田埂晨景 → 书页放大，开始漫游</p><div class="cells">${stops}</div><p class="line">每幕听沿途对白、探访两处细节、翻过旧物。在《山河图鉴》中可重听同一段本幕对白，或从左页进入任意一幕。</p><p class="line">登船前留字 → 星河号升空 → 回望地球 → 倒翻收卷入图鉴 → 终章回读五句留字和自己的留言</p>${foot('交互流程',1)}</article>`));
+save('flow.html',html(title+' · 交互流程',flowCss,`<article>${mast}<h2>从翻书到收卷</h2><p>轻点书封 → 阅读人物导览与总背景 → 拟真翻至田埂晨景 → 书页放大，开始漫游</p><div class="cells">${stops}</div><p class="line">每幕听沿途对白、操作旧物并翻面留字。在书中可重听同一段本幕对白，或从左页进入任意一幕。</p><p class="line">登船前留字 → 星河号升空 → 回望地球 → 五页连翻入书 → 终章回读五句留字和自己的留言</p>${foot('交互流程',1)}</article>`));

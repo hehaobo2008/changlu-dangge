@@ -45,20 +45,20 @@ try {
   else {const legacy=JSON.parse(localStorage.getItem('shanhe.knocks')||'{}');if(typeof legacy.sound==='boolean')preferences.sound=legacy.sound;}
 } catch {}
 if (typeof preferences !== 'object') preferences = {};
-const visited=new Set(preferences.visited||[0]),seen=new Set(preferences.seen||[]);
+const visited=new Set(preferences.visited||[0]);
 let finishedBook=preferences.completed===true;
 function savePreferences() {
   preferences.wish=state.replyDraft;
-  try { localStorage.setItem('shanhe.yisui.v1', JSON.stringify({ visited:[...visited],seen:[...seen],completed:finishedBook,sound: state.sound, memories:[...state.collected], quotes:[...state.kept], wish:state.replyDraft, speed:state.speed, skipRead:state.skipRead, hinted:state.hinted })); } catch {}
+  try { localStorage.setItem('shanhe.yisui.v1', JSON.stringify({ visited:[...visited],completed:finishedBook,sound: state.sound, memories:[...state.collected], quotes:[...state.kept], wish:state.replyDraft, speed:state.speed, skipRead:state.skipRead, hinted:state.hinted })); } catch {}
 }
 
 const SPACING = 420;
 const ZONES = [
-  { id: 'rural', label: '田埂晨', num: '壹', year: '1983', center: 0, file: 'rural.glb', start: 0.045, end: 0.215 },
-  { id: 'town', label: '街市暮', num: '贰', year: '1996', center: -420, file: 'town.glb', start: 0.25, end: 0.43 },
-  { id: 'city', label: '城夜雨', num: '叁', year: '2008', center: -840, file: 'city.glb', start: 0.47, end: 0.65 },
-  { id: 'rail', label: '山河速', num: '肆', year: '2023', center: -1260, file: 'rail.glb', start: 0.69, end: 0.86 },
-  { id: 'future', label: '星河远', num: '伍', year: '2049', center: -1680, file: 'future.glb', start: 0.90, end: 1.0 },
+  { id: 'rural', label: '田埂晨', num: '01', year: '1983', center: 0, ovX: -24, ovY: -44, file: 'rural.glb', start: 0.045, end: 0.215 },
+  { id: 'town', label: '街市暮', num: '02', year: '1996', center: -420, ovX: 30, ovY: 50, file: 'town.glb', start: 0.25, end: 0.43 },
+  { id: 'city', label: '城夜雨', num: '03', year: '2008', center: -840, ovX: -28, ovY: -24, file: 'city.glb', start: 0.47, end: 0.65 },
+  { id: 'rail', label: '山河速', num: '04', year: '2023', center: -1260, ovX: 32, ovY: 68, file: 'rail.glb', start: 0.69, end: 0.86 },
+  { id: 'future', label: '星河远', num: '05', year: '2049', center: -1680, ovX: -18, ovY: 16, file: 'future.glb', start: 0.90, end: 1.0 },
 ];
 
 const PALETTES = [
@@ -78,15 +78,15 @@ const PALETTES = [
     sunDir:[-.82,.18,-.53], sunInt:1.68, hemi:.56, fill:.28, fillColor:'#9ab8c6', exp:1.12,
     ink:.31, bloom:.23, stars:.22, clouds:.18, waterDeep:'#254857', waterShallow:'#638683' },
 ];
-const OVERVIEW_PAL = { name: 'overview', top: '#f3ecdf', bot: '#e7dcc6', sun: '#ffd9a0', fog: '#ece2cf', fogNear: 760, fogFar: 4200,
-  sunDir: [-0.45, .5, -0.42], sunInt: 2.45, hemi: 1.55, fill: .7, fillColor: '#fff6e5', exp: 1.2,
-  ink: .72, bloom: .2, stars: 0, clouds: 0, waterDeep: '#4e6a5a', waterShallow: '#9ab09c' };
+const OVERVIEW_PAL = { name: 'overview', top: '#d9e6f3', bot: '#eef3f8', sun: '#fff4de', fog: '#e3ecf5', fogNear: 760, fogFar: 4200,
+  sunDir: [-0.45, .5, -0.42], sunInt: 2.45, hemi: 1.55, fill: .7, fillColor: '#f6fbff', exp: 1.15,
+  ink: .64, bloom: .16, stars: 0, clouds: 0, waterDeep: '#3c5d70', waterShallow: '#8aa8b6' };
 
 const OVERVIEW_POSE = { pos: [900, 700, 600], look: [0, 0, -820], fov: 42 };
 const OVERVIEW_POSE_PORTRAIT = { pos: [-341, 3192, -57], look: [0, 20, -900], fov: 48 };
 function overviewPose() { return innerWidth / innerHeight < .85 ? OVERVIEW_POSE_PORTRAIT : OVERVIEW_POSE; }
 // ---------------------------------------------------------------- UI helpers
-const el=Object.fromEntries(['loading','loadFill','loadPct','landing','startBtn','hud','chapter','chNum','chYear','chTitle','chLine','chSetting','mailFrom','mailAction','letterPages','prevLetter','nextLetter','launchSignal','cardTitle','cardBody','cardIndex','keepLetter','cardClose','tlFill','timeline','scrollHint','overviewBtn','soundBtn','soundTxt','infoBtn','info','infoClose','overview','ovLabels','ovBack','ink','wishInput','launchBtn','skipFinale','endCard','toast','world','autoBtn','autoTxt','homeBtn','travelMeta','journeyPct','collectedTxt','memoryBtn','landingSoundBtn','replyQuote'].map(id=>[id,$('#'+id)]));
+const el=Object.fromEntries(['loading','loadFill','loadPct','landing','startBtn','hud','chapter','chNum','chYear','chTitle','chLine','chSetting','mailFrom','mailAction','letterPages','prevLetter','nextLetter','launchSignal','cardTitle','cardBody','cardIndex','keepLetter','cardClose','tlFill','timeline','scrollHint','overviewBtn','soundBtn','soundTxt','infoBtn','info','infoClose','overview','ovLabels','ovBack','ink','wishInput','launchBtn','endCard','toast','world','autoBtn','autoTxt','homeBtn','travelMeta','journeyPct','collectedTxt','memoryBtn','landingSoundBtn','replyQuote'].map(id=>[id,$('#'+id)]));
 el.card=$('#ticketLayer');
 const boardingReturn=$('#boardingReturn');
 
@@ -129,7 +129,7 @@ function syncUIState(force = false) {
 let panelReturnFocus = null;
 function closePanels(restoreFocus=true){
   const wasOpen=state.modal,resume=state.resumeAfterTicket;
-  el.info.classList.remove('show');el.info.inert=true;$('#detailPanel').classList.remove('show');$('#detailPanel').inert=true;tickets.hide();
+  el.info.classList.remove('show');el.info.inert=true;tickets.hide();
   state.modal=null;state.arrival=null;state.storyStop=null;state.braking=null;state.glideSpeed=state.metreSpeed=0;state.target=state.progress;
   state.resumeAfterTicket=false;el.infoBtn.setAttribute('aria-expanded','false');syncUIState(true);
   if(restoreFocus&&wasOpen===el.card){
@@ -223,18 +223,26 @@ scene.add(sun); scene.add(sun.target);
 const fill = new THREE.DirectionalLight('#cfe0e8', .55);
 scene.add(fill); scene.add(fill.target);
 
-// Island silhouettes during aerial views.
+// Island silhouettes and connecting ribbon during aerial overview.
 const islandShadows = new THREE.Group();
 scene.add(islandShadows);
 const islandShadowByZone = {};
 for (const z of ZONES) {
-  const m = new THREE.MeshBasicMaterial({ map: shadowTex, transparent: true, opacity: .28, depthWrite: false, color: '#3b2a18' });
+  const m = new THREE.MeshBasicMaterial({ map: shadowTex, transparent: true, opacity: .28, depthWrite: false, color: '#263445' });
   const p = new THREE.Mesh(new THREE.PlaneGeometry(430, 430), m);
   p.rotation.x = -Math.PI / 2; p.position.set(0, -28, z.center); p.userData.noNormal = true;
   islandShadows.add(p);
   islandShadowByZone[z.id] = p;
 }
 islandShadows.visible = false;
+const ribbonCurve = new THREE.CatmullRomCurve3(ZONES.map(z => new THREE.Vector3(z.ovX, z.ovY - 12, z.center)));
+const overviewRibbon = new THREE.Mesh(
+  new THREE.TubeGeometry(ribbonCurve, 96, 2.2, 8, false),
+  new THREE.MeshBasicMaterial({ color: '#78b0e2', transparent: true, opacity: .38, depthWrite: false })
+);
+overviewRibbon.visible = false;
+overviewRibbon.userData.noNormal = true;
+scene.add(overviewRibbon);
 
 // ---------------------------------------------------------------- water + zones
 const water = applyWater(scene, 'all'); // created once; no water meshes yet, but materials ready
@@ -298,6 +306,10 @@ async function loadWorld() {
     group.updateMatrixWorld(true);
     group.traverse(o => {
       if (o.isMesh) {
+        if (z.id === 'city' && (o.name === 'City_NeonPink' || o.name === 'City_NeonCyan')) {
+          o.visible = false;
+          return;
+        }
         o.castShadow = true; o.receiveShadow = true;
         if (o.material) o.material.envMapIntensity = .6;
         const mat=o.material;
@@ -324,7 +336,7 @@ async function loadWorld() {
           if(mat.map) mat.map.anisotropy=4;
         }
         const windowPower = {CityWarm:.52, CityCool:.28, CityPale:.42, SignsNeon:1.0,
-          WinWarm:.65, WinPale:.48, ShopGlow:.56, NeonPink:1.70, NeonCyan:1.38};
+          WinWarm:.65, WinPale:.48, ShopGlow:.56};
         if (windowPower[mat.name]!==undefined) mat.emissiveIntensity=windowPower[mat.name];
         // The original night-like glowing panes and lanterns fight the morning light.
         if (z.id === 'rural' && o.material) {
@@ -347,7 +359,7 @@ async function loadWorld() {
     for (const p of data.lights) {
       const s = new THREE.Sprite(new THREE.SpriteMaterial({ map: glowTex, transparent: true, opacity: .5,
         depthWrite: false, color: '#ffd9a0', blending: THREE.AdditiveBlending, fog: false }));
-      s.position.copy(p); s.scale.set(7, 7, 1); s.userData.noNormal = true;
+      s.position.copy(p); s.scale.set(7, 7, 1); s.userData.noNormal = true; s.userData.basePos = p.clone();
       scene.add(s); data.glowSprites = data.glowSprites || []; data.glowSprites.push(s);
     }
     // smoke
@@ -357,7 +369,7 @@ async function loadWorld() {
           depthWrite: false, color: '#cfc6b6', fog: true }));
         s.position.copy(p).add(new THREE.Vector3((Math.random() - .5) * 2, Math.random() * 2, (Math.random() - .5) * 2));
         s.scale.set(5, 5, 1); s.userData.noNormal = true;
-        s.userData.smoke = { base: p.clone(), phase: Math.random() * 8, speed: .7 + Math.random() * .5, sway: Math.random() * 6 };
+        s.userData.smoke = { rawBase: p.clone(), base: p.clone(), phase: Math.random() * 8, speed: .7 + Math.random() * .5, sway: Math.random() * 6 };
         scene.add(s); data.smokeSprites = data.smokeSprites || []; data.smokeSprites.push(s);
       }
     }
@@ -469,8 +481,34 @@ async function loadWorld() {
   for(const [chapter,data] of Object.entries(zones)) {
     for(const object of [data.group,data.vehicle,data.train,data.car,data.hsr,data.harmony,data.rocket])
       object?.traverse(o=>{if(o.isMesh && o.material) illustrate(o.material,chapter);});
+    for(const obj of [data.vehicle,data.contact,data.train,data.car,data.hsr,data.harmony,data.rocket])
+      if(obj)obj.userData.basePos=obj.position.clone();
   }
   trains=railway(zones);
+}
+function applyOverviewLayout(active,t=0){
+  overviewRibbon.visible=!!active;
+  for(let i=0;i<ZONES.length;i++){
+    const z=ZONES[i],d=zones[z.id];
+    if(!d?.group)continue;
+    const dx=active?(z.ovX||0):0;
+    const bob=active&&!reducedMotion&&!state.frozen?Math.sin(t*.85+i*1.25)*5.5:0;
+    const dy=active?(z.ovY||0)+bob:0;
+    d.group.position.set(dx,dy,z.center);
+    islandShadowByZone[z.id]?.position.set(dx,-28+dy*.72,z.center);
+    if(d.fireflyPoints)d.fireflyPoints.position.set(dx,dy,0);
+    if(d.glowSprites)for(const s of d.glowSprites){const bp=s.userData.basePos;if(bp)s.position.set(bp.x+dx,bp.y+dy,bp.z);}
+    if(d.smokeSprites)for(const s of d.smokeSprites){const sm=s.userData.smoke;if(sm?.rawBase)sm.base.set(sm.rawBase.x+dx,sm.rawBase.y+dy,sm.rawBase.z);}
+    for(const obj of [d.vehicle,d.contact,d.car,d.rocket]){
+      const bp=obj?.userData?.basePos;
+      if(bp)obj.position.set(bp.x+dx,bp.y+dy,bp.z);
+    }
+    if(d.train?.userData?.basePos){d.train.position.y=d.train.userData.basePos.y+dy;d.train.position.z=d.train.userData.basePos.z;}
+    for(const tr of [d.hsr,d.harmony]){
+      const bp=tr?.userData?.basePos;
+      if(bp){tr.position.x=bp.x+dx;tr.position.y=bp.y+dy;}
+    }
+  }
 }
 
 // ---------------------------------------------------------------- camera sampling
@@ -719,9 +757,9 @@ function updateSkyLights(dt) {
     sun.shadow.needsUpdate = true; shadowElapsed = 0; lastShadowView = shadowView;
   }
   if (state.mode==='overview') {
-    scene.background.copy(new THREE.Color('#f3ecdf'));
+    scene.background.copy(new THREE.Color('#e5edf6'));
     if (scene.fog) {
-      scene.fog.color.set('#efe6d5');
+      scene.fog.color.set('#dce6f2');
       scene.fog.near = mapDistance+400;
       scene.fog.far = mapDistance+2800;
     }
@@ -838,7 +876,7 @@ function approachIsland(idx) {
   resetNarrative();state.presented.delete(idx);
   if(!state.ready)return;
   if(!state.started) startExperience(true);
-  closePanels(false);setAuto(false);disposeFinale();
+  closePanels(false);applyOverviewLayout(false);setAuto(false);disposeFinale();
   const p=ENTRY[idx],pose=overviewPose();
   const look=new THREE.Vector3(...hermite('look',p)),to=new THREE.Vector3(...hermite('pos',p));
   const wideLook=look.clone().lerp(new THREE.Vector3(0,12,ZONES[idx].center),.42);
@@ -855,7 +893,7 @@ function approachIsland(idx) {
 function jumpTo(t) {
   state.glideSpeed=0;
   cancelArrival();
-  closePanels(false); setAuto(false);
+  closePanels(false); applyOverviewLayout(false); setAuto(false);
   el.toast.classList.remove('show');
   disposeFinale();
   state.finaleShown = false;
@@ -882,12 +920,14 @@ function enterOverview() {
   el.scrollHint.classList.remove('show');
   buildOverviewLabels();
   syncUIState(true);
+  applyOverviewLayout(true,state.time);
   frameOverview();updateSkyLights(1);updateZoneVisibility();updateAmbient(0);
   el.toast.classList.remove('show');
   el.ovBack.textContent = state.overviewOrigin === 'landing' ? '返回封面 →' : state.overviewOrigin === 'ended' ? '返回尾声 →' : '回到路上 →';
   el.ovBack.focus({ preventScroll: true });
 }
 function exitOverview(toTravel = false) {
+  applyOverviewLayout(false);
   state.mode = toTravel ? 'travel' : state.overviewOrigin || 'travel';
   el.overview.classList.add('hidden');
   el.hud.classList.remove('hidden'); el.timeline.classList.remove('hidden');
@@ -912,14 +952,13 @@ function buildOverviewLabels() {
   }
   state.ovLabels = [...el.ovLabels.querySelectorAll('.ov-label')];
 }
-function frameOverview() {
+function positionOverviewLabels() {
+  if(!state.ovLabels?.length)return;
   const w=el.world.clientWidth,h=el.world.clientHeight;
-  state.camLook=frameIslandMap(camera,ZONES,w,h);
-  mapDistance=camera.position.distanceTo(state.camLook);
-  camera.far=Math.ceil(mapDistance+1200);camera.updateProjectionMatrix();
   state.ovLabels.forEach((button,i)=>{
-    const z=ZONES[i];
-    const anchor=new THREE.Vector3(0,w<=h?10:74,z.center).project(camera);
+    const z=ZONES[i],pos=zones[z.id]?.group?.position;
+    const ox=pos?pos.x:(z.ovX||0),oy=pos?pos.y:(z.ovY||0);
+    const anchor=new THREE.Vector3(ox,oy+(w<=h?14:76),z.center).project(camera);
     const x=(anchor.x+1)*w/2,y=(1-anchor.y)*h/2;
     if(w<=h){
       const left=Math.max(14,w*.09);
@@ -929,15 +968,31 @@ function frameOverview() {
     button.style.top=y+'px';
   });
 }
+function frameOverview() {
+  const w=el.world.clientWidth,h=el.world.clientHeight;
+  state.camLook=frameIslandMap(camera,ZONES,w,h);
+  mapDistance=camera.position.distanceTo(state.camLook);
+  camera.far=Math.ceil(mapDistance+1200);camera.updateProjectionMatrix();
+  positionOverviewLabels();
+}
 
-// Intersect the common island base plane so the scenery is also a touch target.
+// Intersect each island's elevated plane so undulating scenery remains an accurate touch target.
 const mapRay=new THREE.Raycaster(),mapPlane=new THREE.Plane(new THREE.Vector3(0,1,0),0);
 const mapPoint=new THREE.Vector3();
 function islandAtPointer(e){
   const r=canvas.getBoundingClientRect();
   mapRay.setFromCamera(new THREE.Vector2((e.clientX-r.left)/r.width*2-1,1-(e.clientY-r.top)/r.height*2),camera);
-  if(!mapRay.ray.intersectPlane(mapPlane,mapPoint)||Math.abs(mapPoint.x)>160)return -1;
-  return ZONES.findIndex(z=>Math.abs(mapPoint.z-z.center)<=155);
+  let hit=-1,best=Infinity;
+  for(let i=0;i<ZONES.length;i++){
+    const z=ZONES[i],pos=zones[z.id]?.group?.position;
+    const ox=pos?pos.x:(z.ovX||0),oy=pos?pos.y:(z.ovY||0);
+    mapPlane.constant=-oy;
+    if(mapRay.ray.intersectPlane(mapPlane,mapPoint)&&Math.abs(mapPoint.x-ox)<=165&&Math.abs(mapPoint.z-z.center)<=160){
+      const dist=mapRay.ray.origin.distanceToSquared(mapPoint);
+      if(dist<best){best=dist;hit=i;}
+    }
+  }
+  return hit;
 }
 function showLetter(idx,{reading=false,archive=false,stop=false}={}) {
   state.reading=idx;
@@ -966,7 +1021,7 @@ function updateMail(){
   if(through>state.delivered){state.delivered=through;if(state.modal===el.card)updateLetterPages();}
   const idx=offeredLetter();
   el.mailFrom.textContent=letters[idx].title;
-  el.mailAction.textContent='打开山河图鉴';
+  el.mailAction.textContent='翻开书页';
 }
 const ticketStops=[.128,.342,.572,.812,1];
 const islandEnds=[.200,.405,.629,.847,1.001];
@@ -1007,7 +1062,7 @@ function beginArrival(idx,{coasting=false}={}){
   el.card.style.setProperty('--ticket-reveal-duration',(approach?Math.max(.3,approach.curve.duration-approach.curve.elapsed):1.1)+'s');
   ticketOrigin(idx);showLetter(idx,{stop:true});
   el.card.setAttribute('role','dialog');el.card.setAttribute('aria-modal','true');el.card.setAttribute('aria-labelledby','ticketLabel');
-  $('#storyNotice').textContent=letters[idx].frontLabel+'已展开。'+$('#ticketFlipHint').textContent;
+  $('#storyNotice').textContent=letters[idx].frontLabel+'已展开。';
   $('#ticketFront').focus({preventScroll:true});
 }
 function shelveArrival(){
@@ -1054,7 +1109,7 @@ function openCard(which,reading=true){
   (reading?$('#cardTitle'):$('#ticketFront')).focus({preventScroll:true});
 }
 function updateCollection(){
-  el.collectedTxt.textContent='票根 '+state.collected.size+' / 5';
+  el.collectedTxt.textContent='旧物 '+state.collected.size+' / 5';
   $$('#timeline button[data-ch]').forEach((b,i)=>b.classList.toggle('collected',state.collected.has(i)));
 }
 function updateKeepButton(idx){
@@ -1104,7 +1159,9 @@ function chapterMorph(idx,m){
   // At the corner, anchor the scaled panel by its bottom, including wrapped lines.
   st.setProperty('--align-y',(50+21*m)+'%');
   st.setProperty('--cs',String(1-.29*m));st.setProperty('--long',1-smooth((m-.15)/.4));
-  st.setProperty('--short',smooth((m-.55)/.45));el.chapter.dataset.compact=String(m===1);
+  st.setProperty('--short',smooth((m-.55)/.45));
+  st.setProperty('--bg',String(smooth((m-.18)/.82)));
+  el.chapter.dataset.compact=String(m===1);
 }
 function fadeChapter(){
   if(!reducedMotion)el.chapter.animate([{opacity:0},{opacity:1}],{duration:760,easing:'ease-out'});
@@ -1123,7 +1180,7 @@ function updateNarrative(){
     narrationPace=clamp((travelTime(ticketStops[idx])-travelTime(state.progress)-4)/(dialogue.duration(idx)+1),.12,3.65*state.speed);
   }
 }
-const codex=createCodex({audio,dialogue,visited,seen,kept:state.kept,completed:()=>finishedBook,wish:()=>state.wish||state.replyDraft,unmute:()=>{if(!state.sound)toggleSound();},
+const codex=createCodex({audio,dialogue,visited,kept:state.kept,completed:()=>finishedBook,wish:()=>state.wish||state.replyDraft,unmute:()=>{if(!state.sound)toggleSound();},
   close(){state.mode=codexOrigin;syncUIState(true);if(state.mode==='ended'){$('#earthCaption').hidden=false;$('#closeEarth').focus();}else el.memoryBtn.focus();},
   scene(i){disposeFinale();resetNarrative();state.presented.delete(i);state.progress=state.target=ENTRY[i];state.jumping=null;state.glideSpeed=0;state.look.set(0,0);state.mouse.set(0,0);trains?.reset();metro?.reset();updateCamera(5);updateSkyLights(8);updateZoneVisibility();updateAmbient(0);paper.render();return canvas;},
   enter(i){state.mode='travel';state.chapter=i;state.finaleShown=false;audio.setChapter(i);syncUIState(true);updateNarrative();canvas.focus();},
@@ -1141,7 +1198,6 @@ function rewindEarth(){
   earthEnding.render();codexOrigin='ended';state.mode='closing-book';syncUIState(true);$('#earthCaption').hidden=true;
   codex.rewind(canvas,()=>{state.mode='codex';syncUIState(true);});
 }
-$('#codex').addEventListener('read-detail',savePreferences);
 $('#closeEarth').onclick=rewindEarth;
 document.addEventListener('touchstart',e=>{earthTouch=state.mode==='ended'?e.touches[0].clientY:null;},{passive:true});
 document.addEventListener('touchend',e=>{if(earthTouch!==null&&earthTouch-e.changedTouches[0].clientY>35)rewindEarth();earthTouch=null;},{passive:true});
@@ -1279,7 +1335,6 @@ addEventListener('keydown', (e) => {
   if ((e.key === 'Enter' || e.key === ' ') && e.target.closest('button,a')) return;
   if (state.mode === 'landing' && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); startExperience(); return; }
   if (state.mode === 'travel') {
-    if(e.key.toLowerCase()==='f'){showDetail(routeIndex(state.progress),0);return;}
     if (['ArrowDown','PageDown',' ','ArrowUp','PageUp','Home','End'].includes(e.key)) { setAuto(false); state.jumping = null; }
     if (e.key === 'ArrowDown' || e.key === 'PageDown' || e.key === ' ') { advanceByInput(4.5); e.preventDefault(); }
     if (e.key === 'ArrowUp' || e.key === 'PageUp') { advanceByInput(-4.5); e.preventDefault(); }
@@ -1512,12 +1567,15 @@ function tick(dt, draw = true) {
     }
   } else if (state.mode === 'finale') {
     updateFinale(dt);
+  } else if (state.mode === 'overview') {
+    applyOverviewLayout(true, state.time);
+    positionOverviewLabels();
   }
   updateSkyLights(dt);
   updateZoneVisibility();
   updateAmbient(dt);
   camera.updateMatrixWorld();
-  updateMail();presentAlongRoute(dt);updateLandmarks();
+  updateMail();presentAlongRoute(dt);
   const darkChapter=i=>i===2 || i===4;
   const crossing=state.crossing;
   const night=crossing ? THREE.MathUtils.lerp(+darkChapter(crossing.from),+darkChapter(crossing.to),crossing.blend) : +darkChapter(state.chapter);
@@ -1594,10 +1652,12 @@ async function prepareRoute() {
   try {
     $('#loadStatus').textContent='准备开场 · 五幕展卷';
     state.mode='overview';state.progress=ENTRY[0];
+    applyOverviewLayout(true,0);
     state.camLook=frameIslandMap(camera,ZONES,innerWidth,innerHeight);updateSkyLights(1);updateZoneVisibility();updateAmbient(0);
     await prepareVisibleMaterials();
     paper.render();
     await waitForPreviewDraw();
+    applyOverviewLayout(false);
     state.mode='travel';
     for (const [i,p] of samples.entries()) {
       state.progress=p;
@@ -1621,6 +1681,7 @@ async function prepareRoute() {
       await waitForPreviewDraw();
     }
   }finally{
+    applyOverviewLayout(false);
     const size=renderer.getSize(new THREE.Vector2());
     paper.composer.renderToScreen=originalOutput;paper.setSize(size.x,size.y);
     renderer.setRenderTarget(null);
@@ -1717,30 +1778,6 @@ function fileTicket(){
   document.body.append(stub);stub.style.left=from.left+from.width*.5+'px';stub.style.top=from.top+from.height*.5+'px';
   stub.animate([{transform:'translate(-50%,-50%) rotate(-5deg)',opacity:1},{transform:'translate('+ (to.left+to.width/2-from.left-from.width/2)+'px,'+(to.top+to.height/2-from.top-from.height/2)+'px) scale(.16) rotate(14deg)',opacity:.1}],{duration:440,easing:'ease-in'}).finished.finally(()=>stub.remove());
 }
-let detailChapter=0,detailIndex=0;
-function showDetail(idx,n){
-  if(state.mode!=='travel'||state.modal&&state.modal!==$('#detailPanel'))return;
-  detailChapter=idx;detailIndex=n;seen.add(idx+'-'+n);savePreferences();
-  const panel=$('#detailPanel'),s=scenes[idx];panel.dataset.kind=letters[idx].kind;panel.dataset.spot=String(n);
-  $('#detailYear').textContent=ZONES[idx].year+' · '+ZONES[idx].label;$('#detailTitle').textContent=s.spots[n];$('#detailStory').textContent=s.stories[n];
-  if(state.modal!==panel)openPanel(panel,$('#detailClose'));
-}
-const landmarkButtons=$$('#landmarks button');
-const worldPoint=new THREE.Vector3();
-function updateLandmarks(){
-  const idx=routeIndex(state.progress),zone=zones[ZONES[idx].id],s=scenes[idx];
-  const active=state.mode==='travel'&&!state.crossing&&!state.modal&&zone;
-  landmarkButtons.forEach((b,i)=>{
-    if(!active){b.hidden=true;return;}
-    zone.group.localToWorld(worldPoint.fromArray(s.points[i]));
-    const dist=worldPoint.distanceTo(camera.position);worldPoint.project(camera);
-    b.hidden=dist>(s.reach??42)||worldPoint.z>=1||worldPoint.z<=-1||Math.abs(worldPoint.x)>.88||worldPoint.y>.76||worldPoint.y<-.43;
-    if(!b.hidden){b.style.left=((1+worldPoint.x)*50)+'%';b.style.top=((1-worldPoint.y)*50)+'%';b.setAttribute('aria-label',s.spots[i]);b.title=s.spots[i];}
-  });
-}
-landmarkButtons.forEach((b,n)=>b.addEventListener('click',()=>showDetail(routeIndex(state.progress),n)));
-$('#detailBtn').onclick=()=>showDetail(routeIndex(state.progress),0);
-$('#detailNext').onclick=()=>showDetail(detailChapter,1-detailIndex);$('#detailClose').onclick=()=>closePanels();
 $('#travelSpeed').value=String(state.speed);$('#travelSpeed').onchange=e=>{state.speed=Number(e.target.value);savePreferences();};
 $('#skipRead').checked=state.skipRead;$('#skipRead').onchange=e=>{state.skipRead=e.target.checked;savePreferences();};
 for(const [idx,z] of ZONES.entries()){

@@ -8,7 +8,7 @@ export function createTicketView({letters,zones,onFlip,onClose,onDrag,onDragStar
   let index=0,back=false,visible=false,ignoreClick=false,press=null;
   function layout(){
     if(!visible)return;
-    const chrome=['ticketTools','ticketLaunchActions','ticketFlipHint','encounter','archiveYears','returnScene'].reduce((height,id)=>height+get(id).offsetHeight,0);
+    const chrome=['ticketTools','ticketLaunchActions','archiveYears','returnScene'].reduce((height,id)=>height+(get(id)?.offsetHeight||0),0);
     const limit=Math.max(96,innerHeight-36-chrome);
     const rail=!!letters[index].rail;
     const faceHeight=root.clientWidth*(rail?390/620:objectRatios[letters[index].kind]);
@@ -17,12 +17,9 @@ export function createTicketView({letters,zones,onFlip,onClose,onDrag,onDragStar
   }
   const observer=new ResizeObserver(layout);observer.observe(get('ticketBackContent'));
   addEventListener('resize',layout);
-  function actionGrip(){return get('objectTicketFace').querySelector('[data-grip]')||get('actionProp');}
+  function actionGrip(){return get('objectTicketFace').querySelector('[data-grip]');}
   function movingGrip(grip){
-    if(!grip.ownerSVGElement){
-      const copy=grip.cloneNode(true);copy.removeAttribute('id');return copy;
-    }
-    // Lift the actual printed stub or scan label, including its original lettering.
+    // Lift the actual printed stub, including its original lettering.
     const copy=grip.ownerSVGElement.cloneNode(true),box=grip.getBBox();
     copy.setAttribute('viewBox',[box.x,box.y,box.width,box.height].join(' '));
     copy.setAttribute('aria-hidden','true');return copy;
@@ -30,8 +27,8 @@ export function createTicketView({letters,zones,onFlip,onClose,onDrag,onDragStar
   function flip(){
     if(!visible||back)return;
     if(root.dataset.stop==='true'&&!matchMedia('(prefers-reduced-motion: reduce)').matches){
-      const prop=actionGrip(),rect=prop.getBoundingClientRect();
-      if(rect.width){const token=movingGrip(prop);token.setAttribute('class',prop.ownerSVGElement?'moving-print':'moving-prop prop-'+letters[index].kind);
+      const prop=actionGrip(),rect=prop?.getBoundingClientRect();
+      if(rect?.width){const token=movingGrip(prop);token.setAttribute('class','moving-print');
         Object.assign(token.style,{position:'fixed',left:rect.left+'px',top:rect.top+'px',width:rect.width+'px',height:rect.height+'px',zIndex:32});document.body.append(token);
         const end=['translate(2px,-70px) rotate(-24deg)','translate(65px,12px) rotate(19deg)','translate(-9px,12px) rotate(-23deg)','translateX(65px)','translateY(-50px)'][index];
         token.animate([{transform:'none',opacity:1},{transform:end,opacity:0}],{duration:490,easing:'ease-out'}).finished.finally(()=>token.remove());
@@ -43,8 +40,8 @@ export function createTicketView({letters,zones,onFlip,onClose,onDrag,onDragStar
   get('ticketFront').addEventListener('pointerdown',e=>{
     if(e.pointerType==='mouse'&&root.dataset.stop!=='true')return;
     e.currentTarget.setPointerCapture(e.pointerId);
-    const grip=actionGrip().getBoundingClientRect();
-    const onProp=e.clientX>=grip.left-8&&e.clientX<=grip.right+8&&e.clientY>=grip.top-8&&e.clientY<=grip.bottom+8;
+    const grip=actionGrip()?.getBoundingClientRect();
+    const onProp=!!(grip&&e.clientX>=grip.left-8&&e.clientX<=grip.right+8&&e.clientY>=grip.top-8&&e.clientY<=grip.bottom+8);
     ignoreClick=false;press={onProp,id:e.pointerId,x:e.clientX,y:e.clientY,previousY:e.clientY,dragged:false};
   });
   get('ticketFront').addEventListener('pointermove',e=>{
@@ -67,7 +64,6 @@ export function createTicketView({letters,zones,onFlip,onClose,onDrag,onDragStar
   get('shelveTicket').addEventListener('click',onClose);
   get('cardClose').addEventListener('click',onClose);
   get('launchBtn').addEventListener('click',()=>onLaunch(false));
-  get('skipFinale').addEventListener('click',()=>onLaunch(true));
   get('wishInput').addEventListener('focus',()=>requestAnimationFrame(()=>{
     if(visible&&back)get('wishInput').scrollIntoView({block:'center',inline:'nearest'});
   }));
@@ -76,10 +72,6 @@ export function createTicketView({letters,zones,onFlip,onClose,onDrag,onDragStar
     show(idx,{reading=false,archive=false,stop=false,canLaunch=false}={}){
       index=idx;visible=true;back=reading;
       const letter=letters[idx],zone=zones[idx];
-      get('encounter').hidden=!stop;get('encounterYear').textContent=zone.year+' · '+zone.label;get('encounterName').textContent=letter.title;
-      get('actionProp').className='prop-'+letter.kind;
-      get('actionProp').textContent=['纸角','副券','剪票钳','身份证','扫描'][idx];
-      get('actionProp').hidden=!stop||idx===1||idx===4;
       root.dataset.kind=letter.kind;root.dataset.archive=String(archive);root.dataset.stop=String(stop);
       get('objectTicketFace').hidden=!!letter.rail;
       get('objectTicketFace').innerHTML=letter.rail?'':objectTicket(letter.kind,stop);
@@ -91,10 +83,8 @@ export function createTicketView({letters,zones,onFlip,onClose,onDrag,onDragStar
       get('ticketDistance').textContent=letter.distance;
       get('ticketSerial').textContent='SH / 0'+(idx+1);
       get('ticketStub').textContent=idx===0?'家藏':'存根';
-      get('cardEyebrow').textContent=zone.year+' · '+letter.distance;
       get('cardTitle').textContent=letter.backText;
       get('cardBody').textContent=letter.body;
-      get('ticketBackLabel').textContent=letter.backLabel;
       get('ticketReverseBrand').textContent=['晚稻留种便笺','东街电影院 · 票背留字','铁路旅客运输 · K1986','铁路旅客运输 · G2023','星河港 / 登船牌 · 航行留言'][idx];
       get('cardIndex').textContent=String(idx+1).padStart(2,'0')+' / 05';
       get('ticketFront').setAttribute('aria-label',letter.frontLabel+'，'+letter.distance+'。'+(stop?scenes[idx].action:'轻点翻面阅读'));
@@ -111,19 +101,11 @@ export function createTicketView({letters,zones,onFlip,onClose,onDrag,onDragStar
     setSide(value){
       back=!!value;root.dataset.side=back?'back':'front';
       const boarding=!get('ticketLaunchActions').hidden;
-      const archive=root.dataset.archive==='true';
-      get('ticketFlipHint').hidden=false;
-      get('ticketFlipHint').textContent=boarding
-        ?(back?'写好或留白，都可以点亮归途':'轻点翻面留言，或直接点亮归途')
-        :archive?(back?'读完收起，回到旅程':'轻点翻到背面')
-        :(back?'票外向前滑动，继续游览':'轻点翻到背面 · 再向前滑动，继续游览');
-      if(!archive&&!back)get('ticketFlipHint').textContent=scenes[index].drag+' · 也可轻点或按 R';
-      if(back&&!boarding)get('ticketFlipHint').hidden=true;
       get('ticketFront').inert=back;get('ticketBack').inert=!back;
       get('ticketFront').setAttribute('aria-expanded',String(back));
       get('ticketFront').setAttribute('aria-hidden',String(back));get('ticketBack').setAttribute('aria-hidden',String(!back));
-      get('shelveTicket').hidden=back&&!boarding;
-      get('shelveTicket').textContent=boarding?'收起，看星港':'收好，继续游览';
+      get('shelveTicket').hidden=back||boarding;
+      get('shelveTicket').textContent='收好，继续游览';
       layout();
     },
     hide(){visible=false;root.classList.remove('show','arriving');root.inert=true;root.removeAttribute('aria-modal');root.setAttribute('role','group');press=null;},

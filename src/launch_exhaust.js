@@ -77,7 +77,7 @@ function exhaustCloud(atlas,pad){
   const specs=[];
   let seed=3091;
   const rand=()=>((seed=(Math.imul(seed,1664525)+1013904223)>>>0)/4294967296);
-  for(const [kind,count,start,end] of [['mist',12,0,1.7],['apron',54,.55,4.1],['trail',42,1.7,7.0]]){
+  for(const [kind,count,start,end] of [['mist',12,0,1.7],['apron',54,.55,4.1]]){
     for(let i=0;i<count;i++)specs.push({kind,birth:start+(end-start)*(i+.28*rand())/count,
       a:Math.PI*2*rand(),speed:7+rand()*7,roll:(rand()-.5)*.64,
       variant:Math.floor(rand()*8),width:.74+rand()*.48,depth:0});

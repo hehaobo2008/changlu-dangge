@@ -84,7 +84,7 @@ export function railway(zones) {
         const distance=runningTime(cityTime)*6.9, lap=Math.floor(distance/pitch);
         copies.length=0;
         for(let n=-2;n<=Math.min(lap,2);n++) copies.push(n*pitch);
-        green.place(map||reduced?0:distance%pitch-green.ends[1]-18,0,135,map||reduced?single:copies);
+        green.place(map||reduced?0:distance%pitch-green.ends[1]-18,zones.city.group.position.x,135,map||reduced?single:copies);
       }
       if(zones.rail.group.visible){
         // Reset the next pair only while both full consists are behind the tunnels.
