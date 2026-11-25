@@ -118,17 +118,19 @@ def sign_on_side(x, y, z, w, h, side, key, mat=signs):
 
 
 def tower(x,y,w,d,h,style="glass",seed=1,sign_key=None):
-    from city_architecture import building
-    add(building(x,y,w,d,h,style,seed))
-    # Tenant fascias sit on the arcade, just above its glazing.
+    from cbd_towers import place_tower
+    ob, half_x = place_tower(x,y,w,d,h,style,seed,far=False)
+    add(ob)
+    # Tenant fascias sit just outside the street-facing facade.
     if sign_key and seed in (1,2,4,5,9,10,12,14):
         side = 1 if x<0 else -1
-        sign_on_side(x+side*(w/2+1.85),y,6.95,min(8.4,d*.51),1.18,
+        sign_on_side(x+side*(half_x+0.60),y,6.95,min(8.4,d*.51),1.18,
                      "east" if side>0 else "west", sign_key)
 
 def tower_simple(x,y,w,d,h,seed=1):
-    from city_architecture import building
-    add(building(x,y,w,d,h,("step","glass","res")[seed%3],seed,far=True))
+    from cbd_towers import place_tower
+    ob, _ = place_tower(x,y,w,d,h,("step","glass","res")[seed%3],seed,far=True)
+    add(ob)
 
 
 # ---------------------------------------------------------------- street furniture
@@ -512,8 +514,14 @@ def main():
     from era_fixtures import install
     install("city")
     bpy.ops.file.pack_all()
-    B.save_blend(os.path.join(B.ROOT, "assets", "zones", "city.blend"))
+    bpy.data.orphans_purge(do_local_ids=True, do_linked_ids=True, do_recursive=True)
+    blend_path = os.path.join(B.ROOT, "assets", "zones", "city.blend")
+    os.makedirs(os.path.dirname(blend_path), exist_ok=True)
+    bpy.context.preferences.filepaths.save_version = 0
+    bpy.ops.wm.save_as_mainfile(filepath=blend_path, compress=True)
     B.export_glb(os.path.join(B.ROOT, "assets", "zones", "city.glb"))
+    from cbd_towers import cleanup as cleanup_cbd
+    cleanup_cbd()
     print("CITY EXPORTED", os.path.getsize(os.path.join(B.ROOT, "assets", "zones", "city.glb")))
 
 

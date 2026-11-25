@@ -22,9 +22,9 @@ export function openBook(intro,reduced,refreshPicture,onOpen){
     if(stage==='cover'){onOpen();phase('opening');}
     else if(stage==='background'){onOpen();phase('turning');}
   }
-  function click(e){if(!e.target.closest('#skipIntro'))advance();}
+  function click(){advance();}
   function key(e){
-    if(intro.hidden||e.target.closest?.('#skipIntro')||e.repeat||!['Enter',' ','ArrowDown','PageDown'].includes(e.key))return;
+    if(intro.hidden||e.repeat||!['Enter',' ','ArrowDown','PageDown'].includes(e.key))return;
     e.preventDefault();advance();
   }
   function wheel(e){
@@ -53,9 +53,9 @@ export function openBook(intro,reduced,refreshPicture,onOpen){
       if(width!==intro.clientWidth||height!==intro.clientHeight){
         width=intro.clientWidth;height=intro.clientHeight;
         const portrait=width<height;
-        w=Math.min(width*.457,height*(height<430&&!portrait?.82:.65),440);
+        w=Math.min(width*.45,height*(height<430&&!portrait?.80:.54),430);
         const readingHeight=portrait?height*(width<360?.72:width<390?.65:.56):0;
-        h=Math.min(height*.74,Math.max(w*1.28,readingHeight));
+        h=Math.min(height*.76,Math.max(w*1.40,readingHeight));
         artW=Math.min(w*.87,h*.68*width/height);
         binding.style.setProperty('--w',w+'px');binding.style.setProperty('--h',h+'px');
         plate.style.width=artW+'px';plate.style.height=artW*height/width+'px';refreshPicture();
@@ -64,7 +64,7 @@ export function openBook(intro,reduced,refreshPicture,onOpen){
       const coverTime=reduced?.12:1.05;
       const turnTime=reduced?.12:0.96;
       const zoomTime=reduced?.18:1.8;
-      if(stage==='opening'&&clock>=coverTime)phase('background','轻点翻至第一幕 →');
+      if(stage==='opening'&&clock>=coverTime)phase('background','轻点翻至第一幕');
       if(stage==='turning'&&clock>=turnTime)phase('spread');
       if(stage==='spread'&&clock>=2.0)phase('enter');
 
@@ -73,7 +73,7 @@ export function openBook(intro,reduced,refreshPicture,onOpen){
       const zoom=stage==='enter'?coverEase(clock/zoomTime):0;
 
       const compact=width<height?1.43:1;
-      const closedH=Math.min(w*1.42,h);
+      const closedH=Math.min(w*1.40,h);
       const curH=h+(closedH-h)*(1-open);
       binding.style.setProperty('--h',curH+'px');
       const scale=(1+(compact-1)*(1-open))*Math.exp(Math.log(width/artW)*zoom);

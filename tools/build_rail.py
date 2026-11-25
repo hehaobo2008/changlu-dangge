@@ -173,12 +173,6 @@ def build_rail():
     add(B.box("Bridge enamel face",(.075,12.06,2.04),(-6.83,0,31.47),material=B.mat("Valley bridge enamel","#284743",rough=.66)))
     add(letters("Bridge name in enamel","山河大桥",(-6.90,0,31.49),10.8,1.63,
                 B.mat("Bridge ivory letters","#fff2d2",rough=.58),angle=-math.pi/2,brush=True,relief=.045))
-    # village on the north bank
-    for i, (vx, vy) in enumerate([(-52, -72), (-38, -80), (-66, -84), (54, -76)]):
-        z = ground_h(vx, vy)
-        add(B.box("VillageHouse", (6, 5, 3), (vx, vy, z + 1.5), color="#d8cbb0", material=matte, bevel=.05))
-        add(B.tile_roof("VillageRoof", vx, vy, z + 3, 7.2, 6.0, 1.2, .12, "#5f5b52", matte, curl=.4))
-    add(B.sign_quad("StationSign", "yunling", (-45, -68, ground_h(-45, -68) + 3.2), 0, 6, 1.5, signs))
     # wind turbines
     for (tx, ty) in [(-116, -118), (112, -110), (104, 112)]:
         z = ground_h(tx, ty)
@@ -190,7 +184,6 @@ def build_rail():
             add(B.beam("Blade", (tx, ty, z + 30), (tx + math.cos(a) * 13, ty, z + 30 + math.sin(a) * 13),
                        .45, .16, "#e8e6dc", concrete))
     B.empty("FX_Hotspot", (0, 0, Z + 3))
-    B.empty("FX_Smoke_1", (-45, -68, ground_h(-45, -68) + 4))
     add(rail_valley.portals(ground_h,concrete,rock,steel))
     bpy.context.preferences.filepaths.save_version = 0
     B.join_materials("RailScene", ALL)

@@ -34,7 +34,6 @@ export function railwayTicket(data,express=false){
     text(589,135,17,data.toRoman,'font-family="Courier New,monospace" text-anchor="end" letter-spacing="1"')+
     text(29,179,23,data.departure)+text(589,179,23,data.seat,'text-anchor="end"')+
     text(29,218,26,'￥'+data.fare+'元')+text(590,218,24,data.className,'text-anchor="end"')+
-    text(314,216,21,express?'网':'学','text-anchor="middle"')+
     text(29,251,20,express?'电子客票报销凭证 · 不作乘车凭证':'限乘当日当次车')+
     (express?text(30,288,19,'3301061990****1234　宁宁'):'')+
     '<rect x="43" y="306" width="416" height="44" fill="none" stroke="#38403d" stroke-width="1.2" stroke-dasharray="6 4"/>'+

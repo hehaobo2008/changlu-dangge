@@ -1,10 +1,10 @@
 import { Vector3 } from 'three';
 
-// Fit the whole undulating row of miniature landscapes into the part of the page
+// Fit the whole row of miniature landscapes into the part of the page
 // reserved for the map, keeping both outer bounds and vertical elevation in frame.
 export function frameIslandMap(camera, zones, width, height) {
   const portrait = width <= height;
-  const back = (portrait ? new Vector3(.08, 1, -.57) : new Vector3(1, .82, .26)).normalize();
+  const back = (portrait ? new Vector3(.08, 1, -.57) : new Vector3(.96, .72, .22)).normalize();
   const right = new Vector3().crossVectors(camera.up, back).normalize();
   const up = new Vector3().crossVectors(back, right);
   const midY = zones.reduce((s, z) => s + (z.ovY || 0), 0) / zones.length;

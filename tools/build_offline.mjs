@@ -16,6 +16,7 @@ const html0 = fs.readFileSync(path.join(root, 'src/index.html'), 'utf8');
 const files = [
   ...fs.readdirSync(path.join(root,'assets/audio/dialogue')).map(f=>'assets/audio/dialogue/'+f),
   ...['rural','town','city','rail','future','earth'].map(n=>'assets/painted/folio-'+n+'.webp'),
+  'assets/painted/book-cover.webp',
   ...['earth.jpg','clouds.jpg'].map(f=>`assets/earth/${f}`),
   ...['rural','town','city','rail','future'].map(f => `assets/zones/${f}.glb`),
   ...['rickshaw','car','green_train','hsr','harmony','rocket','future_metro'].map(f => `assets/vehicles/${f}.glb`),

@@ -85,13 +85,11 @@ export function createTicketView({letters,zones,onFlip,onClose,onDrag,onDragStar
       get('ticketStub').textContent=idx===0?'家藏':'存根';
       get('cardTitle').textContent=letter.backText;
       get('cardBody').textContent=letter.body;
-      get('ticketReverseBrand').textContent=['晚稻留种便笺','东街电影院 · 票背留字','铁路旅客运输 · K1986','铁路旅客运输 · G2023','星河港 / 登船牌 · 航行留言'][idx];
-      get('cardIndex').textContent=String(idx+1).padStart(2,'0')+' / 05';
       get('ticketFront').setAttribute('aria-label',letter.frontLabel+'，'+letter.distance+'。'+(stop?scenes[idx].action:'轻点翻面阅读'));
       get('ticketComposer').hidden=idx!==4;
-      get('keepLetter').hidden=idx===4;
       get('ticketLaunchActions').hidden=!canLaunch;
       get('cardClose').hidden=canLaunch;
+      get('cardClose').parentElement.hidden=canLaunch;
       root.classList.add('show');root.inert=false;
       get('ticketBack').scrollTop=0;
       this.setSide(reading);layout();

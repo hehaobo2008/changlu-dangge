@@ -35,7 +35,7 @@
       <div class="load-line" role="progressbar" aria-label="加载进度" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><i id="loadFill"></i></div>
       <div class="load-meta"><span id="loadStatus">铺展五座山河</span><span id="loadPct">0%</span></div>
       <div class="charge-guide"><div><b>沿路前行</b><span class="desktop-guide">滚动滚轮或按方向键，前行与回望</span><span class="touch-guide">向上轻滑前行，向下轻滑回望</span></div><div><b>对白与旧物</b><span>聆听沿途双人对白，遇见旧物按提示操作<span class="desktop-guide">或按 R</span></span></div><div><b>声音与书</b><span>建议佩戴耳机；漫游结束或随时可翻开书页</span></div></div>
-    </div><button id="skipLoad" type="button" hidden>跳过引导 →</button>
+    </div>
   </section>
   <section id="errorScreen" class="screen hidden" role="alert" inert>
     <div class="load-inner"><div class="load-seal">路</div><span class="overline">旅程暂未展开</span><h2>山河，还在等你。</h2><p>画面暂时没能展开，请重新尝试。</p><button id="retryBtn" class="solid-btn" type="button">继续展开 <svg><use href="#i-arrow"/></svg></button></div>
@@ -60,12 +60,11 @@
       <div class="book-page first-act"><div class="page-type"><small>一九八三年 · 秋晨</small><h2>01 · 田埂晨</h2><p id="bookActIntro"></p></div><i class="book-folio">02</i></div>
       <div class="leaf-back"><div class="book-print"><span>一九八三年 · 秋晨</span><b>田埂晨</b></div><div id="bookWindow"><canvas id="bookPicture"></canvas></div><i class="book-folio">01</i></div>
       <div class="book-cover"><div class="book-cloth"><div class="book-label"><em>1983 — 2049</em><b>山河织路</b><span>一穗千里</span></div></div>
-      <div class="book-inside"><div class="dedication cast-guide"><small>四代人与一脉稻种</small><ul><li><b>周桂芳（外婆）</b><span>1983 山河村 · 种田选穗留种</span></li><li><b>林穗（妈妈）</b><span>1996 县城东街 · 县粮油店工作安家</span></li><li><b>宁宁（女儿）</b><span>2008—2023 · 农学院育种，改良“山河稻”</span></li><li><b>小满（外孙女）</b><span>2049 星河港 · 科研员，携新稻登月</span></li></ul><em>六十六年 · 四代接力</em></div></div></div>
+      <div class="book-inside"><div class="frontispiece"><span class="front-rule" aria-hidden="true"></span><strong>山河织路</strong><p>一粒稻种从田埂走到星河，<br>四代人把山河织成了路。</p><em>1983 — 2049</em></div></div></div>
       <div class="story-leaf"><div class="leaf-face page-type"><small>一九八三 — 二〇四九</small><h2>一穗千里</h2><p>1983 年秋，山河村的周桂芳收稻时挑出抗风老晚稻留种，把字条塞进考上县城中学的女儿林穗书包里。</p><p>后来林穗在县粮油店工作安家，把家乡好米带进县城。女儿宁宁考入江城农学院研究老稻种，毕业后在云岭试验站培育出高产抗倒伏的“山河稻”。</p><p>2049 年，这脉稻种入选月面广寒站种植实验：五十九岁的宁宁守地面温室做对照，二十四岁的女儿小满登星河号赴月种植。</p></div></div>
       <canvas id="openingCurl" class="curl-canvas" aria-hidden="true"></canvas>
     </div></div>
     <button id="openFolio" type="button">轻点书封，翻开故事</button>
-    <button id="skipIntro" type="button">跳过引入 →</button>
   </section>
   <header id="hud" class="hidden" inert>
     <button id="homeBtn" class="brand" type="button" aria-label="回到开场书页"><span class="brand-badge" aria-hidden="true">山河</span><span class="brand-copy"><span class="brand-mark">山河织路</span><span class="brand-sub">SHAN HE · ZHI LU</span></span></button>
@@ -81,11 +80,10 @@
     </nav>
   </header>
 
-  <div id="chapter" aria-live="polite"><div class="ch-body"><div class="ch-year" id="chYear"></div><h2 class="ch-title"><span id="chNum">01</span><span id="chTitle">田埂晨</span></h2><p class="ch-setting" id="chSetting"></p><p class="ch-line" id="chLine"></p><small class="chapter-invite"><span class="desktop-guide">向下滚动，步入此刻 ↓</span><span class="touch-guide">向上轻滑，步入此刻 ↑</span></small></div></div>
-  <div id="travelMeta" class="travel-meta hidden" inert><span id="journeyPct">00%</span><span class="meta-rule"></span><span id="collectedTxt">旧物 0 / 5</span><span id="mailFrom" hidden></span><span id="mailAction" hidden></span><button id="boardingReturn" type="button" hidden>展开登船牌 ↗</button></div>
+  <div id="chapter" aria-live="polite"><div class="ch-body"><div class="ch-year" id="chYear"></div><h2 class="ch-title"><span id="chTitle">田埂晨</span></h2><p class="ch-setting" id="chSetting"></p><p class="ch-line" id="chLine"></p><small class="chapter-invite"><span class="desktop-guide">向下滚动，步入此刻 ↓</span><span class="touch-guide">向上轻滑，步入此刻 ↑</span></small></div></div>
+  <div id="travelMeta" class="travel-meta hidden" inert><span id="journeyPct">00%</span><span id="mailFrom" hidden></span><span id="mailAction" hidden></span><button id="boardingReturn" type="button" hidden>展开登船牌 ↗</button></div>
 
   <div id="captions" hidden><b></b><span></span></div>
-  <div id="stopNotice" class="stop-notice" role="status" aria-live="polite">沿途旧物</div>
   <div id="ticketScrim" aria-hidden="true"></div>
   <span id="storyNotice" class="sr-only" role="status"></span>
   <section id="ticketLayer" class="ticket-layer" role="group" aria-label="沿途旧物" data-side="front" inert>
@@ -104,8 +102,6 @@
       </button>
       <article id="ticketBack" class="ticket-face ticket-back" aria-hidden="true" inert>
         <div id="ticketBackContent">
-          <div id="ticketReverseBrand" class="ticket-reverse-brand" aria-hidden="true"></div>
-          <div class="ticket-back-top"><span id="cardIndex"></span></div>
           <h3 id="cardTitle" tabindex="-1"></h3>
           <p id="cardBody"></p>
           <div id="ticketComposer" hidden>
@@ -114,14 +110,14 @@
             <div class="ticket-presets" aria-label="选择旅途留言"><button type="button" data-wish></button><button type="button" data-wish></button><button type="button" data-wish></button></div>
             <p id="replyQuote" class="kept-quote" hidden></p>
           </div>
-          <div class="ticket-read-actions"><button id="keepLetter" type="button" aria-pressed="false">留住这句话</button><button id="cardClose" type="button">继续游览 <span aria-hidden="true">→</span></button></div>
+          <div class="ticket-read-actions"><button id="cardClose" type="button">继续游览</button></div>
         </div>
       </article>
     </div>
-    <div id="ticketTools" class="ticket-tools"><nav id="letterPages" aria-label="翻阅旧物" hidden><button id="prevLetter" type="button" aria-label="上一件旧物">← 上一件</button><button id="nextLetter" type="button" aria-label="下一件旧物">下一件 →</button></nav><button id="shelveTicket" type="button">先收好</button></div>
+    <div id="ticketTools" class="ticket-tools"><button id="shelveTicket" type="button">先收好</button></div>
     <nav id="archiveYears" aria-label="年代时间轴" hidden></nav>
     <button type="button" id="returnScene" hidden>回到这一幕 ↗</button>
-    <div id="ticketLaunchActions" class="ticket-launch-actions" hidden><button id="launchBtn" type="button">点亮归途 <span aria-hidden="true">↗</span></button></div>
+    <div id="ticketLaunchActions" class="ticket-launch-actions" hidden><button id="launchBtn" type="button">点亮归途</button></div>
   </section>
 
   <nav id="timeline" class="timeline hidden" aria-label="时代章节" inert><div class="tl-line"><i id="tlFill"></i></div><div class="tl-marks">
@@ -134,7 +130,7 @@
   <div id="scrollHint" class="scroll-hint"><span></span>轻滑前行</div>
   <section id="overview" class="overview hidden" inert aria-label="五幕长卷总览"><div class="ov-head"><div class="ov-kicker">四代接力 · 一穗千里</div><h2 class="ov-title">这粒稻种走了多远？</h2><p>从 1983 年山河村外婆留下的老晚稻，到 2049 年小满带上星河号的月面实验种。五座时代之岛，记录一家四代六十六年的出发与归来。</p></div><div id="ovLabels" class="ov-labels"></div><div class="ov-foot"><button id="ovBack" type="button">回到路上 <svg><use href="#i-arrow"/></svg></button><span>选择一座岛，走进那段时间</span></div></section>
 
-  <aside id="info" class="info" role="dialog" aria-modal="true" aria-labelledby="infoTitle" inert><button id="infoClose" class="card-close" type="button" aria-label="关闭作品说明"><svg><use href="#i-close"/></svg></button><div class="info-eyebrow">关于作品 / VIEWING GUIDE</div><h3 id="infoTitle">一穗千里</h3><p class="info-intro">这部作品用五座实时三维微缩场景，讲述一脉山河老稻在一家四代人手里延续六十六年的故事：外婆周桂芳在山河村选穗留种，妈妈林穗在县城粮油店工作安家，女儿宁宁考入农学院将老稻改良成高产抗倒伏新品种，外孙女小满最终带着它登上“星河号”飞赴月面广寒站。沿途可听见五段生活对白、触发五件时代旧物，并在结尾收卷入书。人物与故事为虚构创作。</p><div class="info-grid"><div><b>沿着路走</b><span>轻滑、滚轮或方向键控制进退。展卷后可以直接选一幕走进去。</span></div><div><b>遇见旧物</b><span>展开留种便笺的折角、撕副券、剪票、刷证、扫码。可用手势、轻点或 R 完成。在票外向前滑动即可继续。</span></div><div><b>翻到另一面</b><span>旧物背面是一句家常话和一段往事。读完继续游览，也可以留住喜欢的一句。</span></div><div><b>点亮归途</b><span>登船牌背面可以留下旅途留言，也可留白。点亮归途，目送火箭远去，回望整颗地球。</span></div></div><div class="view-settings"><label>漫游速度 <select id="travelSpeed"><option value="0.65">慢</option><option value="1" selected>中</option><option value="1.8">快</option></select></label><label><input id="skipRead" type="checkbox"> 重走时跳过已读旧物</label></div><p class="info-note">↑ ↓ 或空格前行 · R 操作旧物 · M 切换声音 · Esc 返回<br>跨岛双击画面可直达下一幕。<br>沿途对白采用合成配音，环境声实时生成。记录、留言与漫游偏好保存在本机。<br>绘景与人物使用 AI 辅助绘制。第二至五幕的树木选自 Quaternius 的 CC0 模型。三种列车沿用《轨上清风》，乡村保留 Poly Haven 的 CC0 材质。<br>地球地表：NASA Earth Observatory · Blue Marble。云层：<a href="https://www.solarsystemscope.com/textures/" target="_blank" rel="noopener">Solar System Scope / INOVE</a>，按 <a href="https://creativecommons.org/licenses/by/4.0/" target="_blank" rel="noopener">CC BY 4.0</a> 使用；原图用于分层光照、云影与色彩调整。</p><div class="info-foot">2026 · 融 / 合 · 原创数字媒体设计</div></aside>
+  <aside id="info" class="info" role="dialog" aria-modal="true" aria-labelledby="infoTitle" inert><button id="infoClose" class="card-close" type="button" aria-label="关闭作品说明"><svg><use href="#i-close"/></svg></button><div class="info-eyebrow">关于作品 / VIEWING GUIDE</div><h3 id="infoTitle">一穗千里</h3><p class="info-intro">这部作品用五座实时三维微缩场景，讲述一脉山河老稻在一家四代人手里延续六十六年的故事：外婆周桂芳在山河村选穗留种，妈妈林穗在县城粮油店工作安家，女儿宁宁考入农学院将老稻改良成高产抗倒伏新品种，外孙女小满最终带着它登上“星河号”飞赴月面广寒站。沿途可听见五段生活对白、触发五件时代旧物，并在结尾收卷入书。人物与故事为虚构创作。</p><div class="info-grid"><div><b>沿着路走</b><span>轻滑、滚轮或方向键控制进退。展卷后可以直接选一幕走进去。</span></div><div><b>遇见旧物</b><span>展开留种便笺的折角、撕副券、剪票、刷证、扫码。可用手势、轻点或 R 完成。在票外向前滑动即可继续。</span></div><div><b>翻到另一面</b><span>旧物背面是一句家常话和一段往事。读完继续游览。</span></div><div><b>点亮归途</b><span>登船牌背面可以留下旅途留言，也可留白。点亮归途，目送火箭远去，回望整颗地球。</span></div></div><div class="view-settings"><label>漫游速度 <select id="travelSpeed"><option value="0.65">慢</option><option value="1" selected>中</option><option value="1.8">快</option></select></label><label><input id="skipRead" type="checkbox"> 重走时跳过已读旧物</label></div><p class="info-note">↑ ↓ 或空格前行 · R 操作旧物 · M 切换声音 · Esc 返回<br>跨岛双击画面可直达下一幕。<br>沿途对白采用合成配音，环境声实时生成。记录、留言与漫游偏好保存在本机。<br>绘景与人物使用 AI 辅助绘制。第二至五幕的树木选自 Quaternius 的 CC0 模型。三种列车沿用《轨上清风》，乡村保留 Poly Haven 的 CC0 材质。<br>地球地表：NASA Earth Observatory · Blue Marble。云层：<a href="https://www.solarsystemscope.com/textures/" target="_blank" rel="noopener">Solar System Scope / INOVE</a>，按 <a href="https://creativecommons.org/licenses/by/4.0/" target="_blank" rel="noopener">CC BY 4.0</a> 使用；原图用于分层光照、云影与色彩调整。</p><div class="info-foot">2026 · 融 / 合 · 原创数字媒体设计</div></aside>
 
   <section id="homecoming" class="homecoming" hidden aria-hidden="true">
     <p id="homecomingWords" class="homecoming-words"></p>
@@ -160,7 +156,7 @@
     <div class="codex-stage">
       <button id="folioPrev" class="codex-arrow prev" type="button" aria-label="上一页"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m15 6-6 6 6 6"/></svg></button>
       <div class="codex-spread">
-        <article class="folio-left"><small id="folioYear"></small><h3 id="folioTitle"></h3><button id="folioImage" aria-label="进入场景"><img alt=""/><canvas hidden></canvas></button></article>
+        <article class="folio-left"><small id="folioYear"></small><h3 id="folioTitle"></h3><button id="folioImage" class="folio-plate" aria-label="进入场景"><img alt=""/><canvas hidden></canvas></button></article>
         <article class="folio-right" tabindex="0"><div id="folioContent"></div></article>
       </div>
       <button id="folioNext" class="codex-arrow next" type="button" aria-label="下一页"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m9 6 6 6-6 6"/></svg></button>

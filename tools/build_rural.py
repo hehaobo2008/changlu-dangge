@@ -360,28 +360,38 @@ def bridge(cx, cy, rot, span=8.0, width=2.0, rise=1.0):
     from model_craft import Batch
     masonry=Batch()
     masonry_colors=("#a39682","#938979","#b3a48d","#9f9380","#b6aa91")
+    # Solid masonry abutments and stepped approaches lock both ends deep into the banks.
+    for side_x in (-1,1):
+        ax=side_x*(span*.47)
+        masonry.box((ax,0,-.28),(1.25,width+.24,1.10),masonry_colors[1])
+        masonry.box((side_x*(span*.5+.78),0,-.28),(1.65,width+.14,.74),masonry_colors[2])
+        masonry.box((side_x*(span*.5+1.45),0,-.38),(1.10,width+.08,.56),masonry_colors[0])
+        for side_y in (-1,1):
+            yy=side_y*(width/2-.015)
+            masonry.box((side_x*(span*.5+.55),yy,.24),(1.05,.20,.38),masonry_colors[3])
+            masonry.box((side_x*(span*.5+1.15),yy,.12),(.95,.19,.30),masonry_colors[4])
     # Wedge stones run through the barrel. The open arch reveals the irrigation channel.
     for i in range(15):
         angles=[math.pi*i/15+.004,math.pi*(i+1)/15-.004]
         points=[]
         for yy in (-width/2,width/2):
             for rad,up,t in ((.69,0,angles[0]),(.69,0,angles[1]),(1,.17,angles[1]),(1,.17,angles[0])):
-                points.append((span*.5*math.cos(t)*rad,yy,.02+(rise*.88+up)*math.sin(t)))
+                points.append((span*.5*math.cos(t)*rad,yy,-.10+(rise*.88+up)*math.sin(t)))
         masonry.part(points,[(0,1,2,3),(7,6,5,4),(0,4,5,1),(1,5,6,2),(2,6,7,3),(3,7,4,0)],masonry_colors[i%5])
     for i in range(18):
         x=-span/2+(i+.5)*span/18
         foot=rise*math.sqrt(max(0,1-(x/(span/2))**2))
-        masonry.box((x,0,foot+.08),(span/18+.015,width+.10,.18),masonry_colors[(i+2)%5])
+        masonry.box((x,0,foot+.04),(span/18+.015,width+.10,.20),masonry_colors[(i+2)%5])
         for side in (-1,1):
-            masonry.box((x,side*(width/2-.015),foot+.27),(span/18+.015,.19,.35),masonry_colors[i%5])
+            masonry.box((x,side*(width/2-.015),foot+.25),(span/18+.015,.19,.36),masonry_colors[i%5])
     for x0 in (-span*.48,-span*.25,0,span*.25,span*.48):
         height=rise*math.sqrt(max(0,1-(x0/(span/2))**2))
         for side in (-1,1):
             yy=side*(width/2-.015)
-            masonry.box((x0,yy,height+.53),(.24,.24,.70),"#a49681")
-            masonry.box((x0,yy,height+.89),(.29,.29,.075),"#b8aa94")
+            masonry.box((x0,yy,height+.51),(.24,.24,.70),"#a49681")
+            masonry.box((x0,yy,height+.87),(.29,.29,.075),"#b8aa94")
     ob=masonry.object("Field bridge stone barrel and coping",stone)
-    B.apply_xform([ob],(cx,cy,.05),rot)
+    B.apply_xform([ob],(cx,cy,.03),rot)
     add(ob)
 
 
@@ -783,10 +793,6 @@ def main():
     # pond and bridge
     pond()
     bridge(48, 17, .03, 9, 2.2, 1.12)
-    # reeds along a stream edge
-    for i in range(30):
-        x, y = 68 + rng.uniform(-2, 2), 50 + rng.uniform(-10, 10)
-        add(B.grass_tuft("ReedGrass", x, y, 0.1, rng.uniform(.6, 1.2), "#8b8a55", rough, rng))
 
     # terraces on the left hill
     for k in range(6):

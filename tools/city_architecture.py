@@ -634,7 +634,7 @@ def noodle_corner():
     level(masonry, chamfer_plan(19.9, -18.3, 7.6, 9.6, 0.65), 15.85, 17.65, "#6c7883")
     metal.box((19.9, -18.3, 17.75), (7.9, 9.9, 0.20), "#9da19c")
 
-    # Preserve ground-floor arcade geometry & noodle shop sightline cleanly
+    # Preserve ground-floor arcade geometry & furnish the noodle shop arcade warmly
     for y in (-21.0, -15.0):
         metal.rod((10.80, y, 0.17), (10.80, y, 3.73), 0.18, "#948673", 10)
     masonry.box((12.45, -18, 3.79), (4.0, 8.32, 0.35), "#778281")
@@ -647,6 +647,20 @@ def noodle_corner():
         y = -23.3 + i * 3.23
         metal.rod((13.15, y, 0.18), (13.15, y, 3.64), 0.092, "#79654e", 8)
     metal.pipe([(14.13, -24.30, 14.89), (14.13, -24.30, 4.04), (13.81, -24.30, 3.83), (13.81, -24.30, 0.20)], 0.089, "#9b847c", 8)
+
+    # Cozy sidewalk tables, stools, ceramic noodle bowls & warm enamel pendant lamps under the arcade
+    for ty in (-20.1, -15.8):
+        metal.rod((11.82, ty, 3.56), (11.82, ty, 2.86), 0.025, "#3b4248", 6)
+        metal.rod((11.82, ty, 2.74), (11.82, ty, 2.86), 0.25, "#2f5a57", 12, end_radius=0.05)
+        warm_trim.rod((11.82, ty, 2.63), (11.82, ty, 2.77), 0.085, "#ffe4ab", 10, end_radius=0.05)
+        masonry.box((11.95, ty, 0.78), (0.76, 0.76, 0.06), "#a67b4d")
+        metal.rod((11.95, ty, 0.18), (11.95, ty, 0.76), 0.055, "#4c4338", 8)
+        masonry.box((11.95, ty, 0.21), (0.48, 0.48, 0.05), "#4c4338")
+        masonry.rod((11.85, ty - 0.12, 0.81), (11.85, ty - 0.12, 0.90), 0.06, "#f1ead8", 10, end_radius=0.095)
+        masonry.rod((12.04, ty + 0.14, 0.81), (12.04, ty + 0.14, 0.89), 0.055, "#efe5d0", 10, end_radius=0.09)
+        for sy in (-0.58, 0.58):
+            masonry.box((11.92, ty + sy, 0.46), (0.34, 0.34, 0.05), "#9e7346")
+            masonry.rod((11.92, ty + sy, 0.18), (11.92, ty + sy, 0.44), 0.032, "#6b5036", 6)
 
     mat_masonry = bpy.data.materials.get("City facades") or B.vmat("City facades", 0.78)
     mat_win = bpy.data.materials.get("City window colour") or B.vmat("City window colour", 0.40, 0.14)

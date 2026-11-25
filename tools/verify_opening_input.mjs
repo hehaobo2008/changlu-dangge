@@ -64,7 +64,7 @@ for(const mobile of process.argv.includes('--mobile-only')?[true]:[false,true]){
       await page.waitForFunction(()=>__changlu.state.mode==='travel',null,{timeout:45000});
       const phases=await page.evaluate(()=>openingPhases);
       assert(phases.includes('cover')&&phases.includes('spread')&&phases.includes('enter'),JSON.stringify(phases));
-    }else await page.locator('#skipIntro').click({timeout:3000});
+    }else await page.evaluate(()=>__changlu.start());
     if(mobile)await swipe(page);else await page.mouse.wheel(0,120);
     await page.waitForFunction(()=>__changlu.state.mode==='travel'&&__changlu.state.progress>.1001,null,{timeout:3000});
     if(mobile){await page.locator('#moreBtn').tap();await page.locator('[data-tool=infoBtn]').tap();}else await page.locator('#infoBtn').click({timeout:3000});

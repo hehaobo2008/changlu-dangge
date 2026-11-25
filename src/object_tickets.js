@@ -13,13 +13,12 @@ export function objectTicket(kind,interactive=false){
     <path d="M8 6L57 4 89 7 135 5 170 7 211 4 259 7 307 4 350 7 413 5 462 46 464 99 461 142 465 190 461 227 464 272 462 321 420 325 376 321 332 324 286 321 238 326 192 322 151 325 105 322 58 325 7 320 9 271 6 225 9 177 5 130 8 79Z" fill="url(#note-paper)"/>
     <path d="M413 5L410 48 462 46Z" fill="#b69b6d" opacity=".32"/><path d="M413 5L416 41 462 46Z" fill="#f8e9c5"/>
     <path d="M231 7Q226 167 236 323" stroke="#b99d6c" opacity=".25"/><path d="M234 7Q229 167 239 323" stroke="#fff9e3" opacity=".7"/>
-    <g stroke="#a99876" opacity=".2"><path d="M30 101L439 101M30 153L439 153M30 205L439 205M30 257L439 257"/></g>
-    <g fill="#4c4d43" font-family="KaiTi,STKaiti,serif" transform="rotate(-2 220 156)">
-      <text x="42" y="78" font-size="22">给去县城念书的阿穗：</text>
-      <text x="60" y="145" font-size="29">最饱的谷留着做种。</text>
-      <text x="65" y="199" font-size="25">走出村口，秋熟记得回来。</text>
-      <text x="336" y="261" font-size="27">妈</text>
-      <text x="321" y="293" font-size="16" opacity=".72">一九八三 · 秋</text>
+    <g stroke="#a99876" opacity=".15"><path d="M30 96L439 96M30 156L439 156M30 216L439 216M30 276L439 276"/></g>
+    <g fill="#363936" font-family="NoteHand,KaiTi,STKaiti,cursive" letter-spacing="1">
+      <text x="44" y="80" font-size="32" transform="rotate(-1.6 44 80)">阿穗：</text>
+      <text x="44" y="144" font-size="26" transform="rotate(-1.1 44 144)">田里最饱的那把谷留着做种了，</text>
+      <text x="42" y="204" font-size="25" transform="rotate(-1.8 42 204)">去县城好好念书，秋收记得回家。</text>
+      <text x="352" y="272" font-size="36" transform="rotate(-3.2 352 272)">妈</text>
     </g>
     <path d="M49 302Q35 291 45 276" stroke="#ac8356" stroke-width="3" opacity=".12"/>
   `);
@@ -67,11 +66,11 @@ export function objectTicket(kind,interactive=false){
         <path d="M30 264H553" stroke="#b8cccc"/>
         <g fill="#173a4b">${bars(31,281,235,31)}</g>
         <text x="292" y="300" fill="#52717c" font-family="Consolas,monospace" font-size="13">SH001 / EAR-XHE / 08A</text>
-        <text x="292" y="319" fill="#52717c" font-size="11">2049.09.01 · 星河号 · 稻种培育任务</text>
+        <text x="292" y="319" fill="#52717c" font-size="11">2049.09.01 · 星河号</text>
         <g fill="#52717c" font-size="13"><text x="612" y="103">登船凭证</text><text x="612" y="166">舱门 / GATE</text><text x="612" y="242">座位 / SEAT</text></g>
         <text x="612" y="134" fill="#173a4b" font-size="21">小满</text><text x="752" y="134" text-anchor="end" fill="#52717c" font-size="12">XIAOMAN</text>
         <g fill="#173a4b" font-family="Consolas,monospace" font-size="36"><text x="612" y="207">03</text><text x="612" y="284">08A</text></g>
-        <text x="612" y="319" fill="#52717c" font-size="12" letter-spacing="2">SH 001 · 三天航程</text>
+        <text x="612" y="319" fill="#52717c" font-size="12" letter-spacing="2">SH 001</text>
       </g>
       <path d="M587 79V332" stroke="#8aa4ac" stroke-dasharray="4 5"/>
       <circle cx="587" cy="0" r="10" fill="#0a1c27"/><circle cx="587" cy="340" r="10" fill="#0a1c27"/>

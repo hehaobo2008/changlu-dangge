@@ -241,15 +241,6 @@ export function stageLandscapes(zones,plates,shadowTexture,ruralGround,ruralWalk
           plant(i%3?'copse':'pine',112+distant()*9,along,3.1+distant()*5.4,1.9);
         }
       }
-      for(let j=0;j<920;j++){
-        const z=random()*199-99,side=j%2?1:-1;
-        const road=3*Math.sin((-z+145)/52)+1.2*Math.sin((-z+20)/19);
-        const x=road+side*(4.8+random()*(j%3===0?25:4.7));
-        if(!ruralWalkable(x,z))continue;
-        const y=floor(x,z)+.04,h=.14+random()*.49,w=.05+random()*.13;
-        draw.triangle([x-w,y,z],[x+w,y,z],[x+w*2.6,y+h,z-.06],
-          ['#b69a4b','#748c55','#aabb67','#d4bd68'][j%4]);
-      }
       draw.storefront(-5.21,49,.28,1,7.05,2.98,plates.granary,'#fff2d7');
       draw.sign('供销合作社','#573e30','#ead09a',-3.17,3.02,49,5.83,.75,Math.PI/2);
       const cottage=new THREE.Mesh(card,new THREE.MeshBasicMaterial({map:plates.cottage,color:'#fff2da'}));
@@ -304,13 +295,17 @@ export function stageLandscapes(zones,plates,shadowTexture,ruralGround,ruralWalk
           draw.block(side*d,19.13,-5,.52,.48,6.6,'#83838a');
         }
       }
-      // Glazing sits at the back of the existing arcade, behind its stone columns.
-      const window=new THREE.Mesh(card,new THREE.MeshStandardMaterial({
-        color:'#41515a',roughness:.24,metalness:.54,envMapIntensity:.8
+      // Illuminated noodle shopfront behind the sidewalk arcade columns (cropped below awning).
+      const noodleMap=plates.noodles.clone();
+      noodleMap.needsUpdate=true;
+      noodleMap.repeat.set(1,.72);
+      noodleMap.offset.set(0,0);
+      const window=new THREE.Mesh(card,new THREE.MeshBasicMaterial({
+        map:noodleMap,color:'#ffe9cb'
       }));
       window.name='Noodle shop street glazing';window.rotation.y=-Math.PI/2;
-      window.position.set(13.07,1.84,18);window.scale.set(7.4,3.08,1);group.add(window);
-      for(const z of [14.35,16.75,19.25,21.65])draw.block(13.04,1.84,z,.07,3.08,.075,'#574f46');
+      window.position.set(13.06,1.81,18);window.scale.set(7.4,3.26,1);window.userData.noNormal=true;group.add(window);
+      for(const z of [14.35,16.75,19.25,21.65])draw.block(13.02,1.84,z,.07,3.14,.075,'#574f46');
       draw.canopy(10.47,18,3.78,-1,7.9,1.20,['#24747a','#477778']);
       draw.sign('灯下面馆','#345557','#ffdb98',9.18,3.50,18,4.85,.73,-Math.PI/2);
       person('actor-student',-10.7,22,1.65,'#d9cbd4',0,.158);

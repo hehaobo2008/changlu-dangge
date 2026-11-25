@@ -28,6 +28,11 @@ export function createCodex({audio,dialogue,visited,kept,completed,wish,unmute,c
     const stack=document.createElement('div');
     stack.className='curl-outgoing'+(single?' single':'');
     const cl=leftPane.cloneNode(true),cr=rightPane.cloneNode(true);
+    const dstCvs=cl.querySelector('canvas');
+    if(!plate.hidden&&dstCvs){
+      dstCvs.width=plate.width;dstCvs.height=plate.height;
+      dstCvs.getContext('2d')?.drawImage(plate,0,0);
+    }
     cl.querySelectorAll('[id]').forEach(n=>n.removeAttribute('id'));
     cr.querySelectorAll('[id]').forEach(n=>n.removeAttribute('id'));
     cr.scrollTop=rightPane.scrollTop;

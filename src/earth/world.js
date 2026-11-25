@@ -60,12 +60,6 @@ export async function makeEarthWorld(renderer,launchSky){
     float landMask=(1.-water)*smoothstep(.045,.18,luminance);
     float towns=smoothstep(.68,.84,fbm(localP*780.))*smoothstep(.52,.68,fbm(localP*65.));
     color+=vec3(.85,.47,.18)*landMask*towns*(1.-smoothstep(-.18,.12,terminator));
-    for(int i=0;i<5;i++){
-      float t=float(i)/4.;
-      vec2 station=vec2(.805+t*.023,.660+t*.011+.002*sin(float(i)*2.));
-      vec2 delta=(vUv-station)*vec2(1.73,1.);float d=length(delta);
-      color+=vec3(.92,.48,.14)*exp(-d*d/.0000019)*smoothstep(float(i),float(i)+.85,homeLights)*.90;
-    }
     float limb=pow(1.-max(0.,dot(n,view)),3.);
     color=mix(color,vec3(.075,.19,.28),clamp(limb*.68+haze,0.,.72));
     gl_FragColor=vec4(color,1.);

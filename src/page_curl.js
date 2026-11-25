@@ -34,9 +34,9 @@ export function renderCurlFrame(ctx,w,h,progress,{
   skewFactor=0.11,
   archFactor=0.056,
   singlePage=false,
-  tint='#f4f6fa',
-  backTint='#eceff5',
-  shade='#101c2d',
+  tint='#f6eee0',
+  backTint='#ece0ca',
+  shade='#231c15',
   clear=true,
 }={}){
   if(clear)ctx.clearRect(0,0,w,h+bleedY*2);
@@ -87,9 +87,9 @@ export function renderCurlFrame(ctx,w,h,progress,{
   // 1. Cast shadow under the lifted edge onto the outgoing/right side.
   const rightShW=14+lift*(singlePage?w*0.16:spine*0.22);
   const shadowGrad=ctx.createLinearGradient(bot.contact,ym,Math.min(w,bot.contact+rightShW),ym);
-  shadowGrad.addColorStop(0,`rgba(14,24,38,${(0.32*lift).toFixed(3)})`);
-  shadowGrad.addColorStop(0.35,`rgba(14,24,38,${(0.14*lift).toFixed(3)})`);
-  shadowGrad.addColorStop(1,'rgba(14,24,38,0)');
+  shadowGrad.addColorStop(0,`rgba(22,20,18,${(0.32*lift).toFixed(3)})`);
+  shadowGrad.addColorStop(0.35,`rgba(22,20,18,${(0.14*lift).toFixed(3)})`);
+  shadowGrad.addColorStop(1,'rgba(22,20,18,0)');
   ctx.fillStyle=shadowGrad;
   ctx.beginPath();
   ctx.moveTo(top.contact,y0);
@@ -105,9 +105,9 @@ export function renderCurlFrame(ctx,w,h,progress,{
   const tipMaxX=Math.max(top.rim,bot.rim);
   if(tipMaxX>0.5){
     const tipGrad=ctx.createLinearGradient(tipMaxX,ym,tipMinX,ym);
-    tipGrad.addColorStop(0,`rgba(12,20,34,${(0.28*lift).toFixed(3)})`);
-    tipGrad.addColorStop(0.45,`rgba(12,20,34,${(0.11*lift).toFixed(3)})`);
-    tipGrad.addColorStop(1,'rgba(12,20,34,0)');
+    tipGrad.addColorStop(0,`rgba(22,20,18,${(0.28*lift).toFixed(3)})`);
+    tipGrad.addColorStop(0.45,`rgba(22,20,18,${(0.11*lift).toFixed(3)})`);
+    tipGrad.addColorStop(1,'rgba(22,20,18,0)');
     ctx.fillStyle=tipGrad;
     ctx.beginPath();
     ctx.moveTo(top.rim,y0-arch*0.2);
@@ -122,9 +122,9 @@ export function renderCurlFrame(ctx,w,h,progress,{
   if(!singlePage&&lift>0.05){
     const spW=18+lift*16;
     const spGrad=ctx.createLinearGradient(spine-spW,ym,spine+spW,ym);
-    spGrad.addColorStop(0,'rgba(14,24,40,0)');
-    spGrad.addColorStop(0.5,`rgba(14,24,40,${(0.24*lift).toFixed(3)})`);
-    spGrad.addColorStop(1,'rgba(14,24,40,0)');
+    spGrad.addColorStop(0,'rgba(24,20,16,0)');
+    spGrad.addColorStop(0.5,`rgba(24,20,16,${(0.24*lift).toFixed(3)})`);
+    spGrad.addColorStop(1,'rgba(24,20,16,0)');
     ctx.fillStyle=spGrad;
     ctx.fillRect(spine-spW,y0,spW*2,h);
   }
@@ -138,12 +138,12 @@ export function renderCurlFrame(ctx,w,h,progress,{
   const xMax=Math.max(top.contact,bot.contact);
   if(xMax-xMin>2){
     const cyl=ctx.createLinearGradient(xMin,ym,xMax,ym);
-    cyl.addColorStop(0,'#cfd7e3');
+    cyl.addColorStop(0,'#d4c5aa');
     cyl.addColorStop(0.14,backTint);
-    cyl.addColorStop(0.48,'#ffffff');
+    cyl.addColorStop(0.48,'#fffaf0');
     cyl.addColorStop(0.78,tint);
-    cyl.addColorStop(0.94,'#dce3ec');
-    cyl.addColorStop(1,'#c7d0dd');
+    cyl.addColorStop(0.94,'#e5d7be');
+    cyl.addColorStop(1,'#cbbba0');
 
     ctx.beginPath();
     ctx.moveTo(top.contact,y0);
@@ -157,17 +157,17 @@ export function renderCurlFrame(ctx,w,h,progress,{
     ctx.fill();
 
     // Crisp illuminated paper-thickness edge along the arched top/outer/bottom silhouette.
-    ctx.strokeStyle=`rgba(255,255,255,${(0.72*lift+0.15).toFixed(3)})`;
+    ctx.strokeStyle=`rgba(255,250,240,${(0.72*lift+0.15).toFixed(3)})`;
     ctx.lineWidth=1.15;
     ctx.stroke();
 
     // Specular highlight ribbon running down the curved roll spine.
     const ribGrad=ctx.createLinearGradient(xMin,ym,xMax,ym);
-    ribGrad.addColorStop(0,'rgba(255,255,255,0)');
-    ribGrad.addColorStop(0.42,'rgba(255,255,255,0)');
-    ribGrad.addColorStop(0.54,`rgba(255,255,255,${(0.55*lift).toFixed(3)})`);
-    ribGrad.addColorStop(0.72,'rgba(255,255,255,0)');
-    ribGrad.addColorStop(1,'rgba(255,255,255,0)');
+    ribGrad.addColorStop(0,'rgba(255,250,240,0)');
+    ribGrad.addColorStop(0.42,'rgba(255,250,240,0)');
+    ribGrad.addColorStop(0.54,`rgba(255,250,240,${(0.55*lift).toFixed(3)})`);
+    ribGrad.addColorStop(0.72,'rgba(255,250,240,0)');
+    ribGrad.addColorStop(1,'rgba(255,250,240,0)');
     ctx.fillStyle=ribGrad;
     ctx.fill();
   }
@@ -280,10 +280,10 @@ export function animateMultiTurn({host,count=5,reverse=true,singlePage=false,onS
   host.append(canvas);
   const ctx=syncCanvasSize(canvas,w,h,bleedY);
 
-  const stagger=145,leafDur=540;
+  const stagger=420,leafDur=960;
   const total=(count-1)*stagger+leafDur;
   const stepped=new Set();
-  for(let i=0;i<count;i++)audio?.pageTurn(i*0.14);
+  for(let i=0;i<count;i++)audio?.pageTurn(i*0.42);
 
   return new Promise(resolve=>{
     const t0=performance.now();

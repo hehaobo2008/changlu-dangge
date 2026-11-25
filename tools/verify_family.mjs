@@ -18,14 +18,14 @@ try{
   await page.goto(pathToFileURL(path.resolve(projectRoot,'dist/山河织路-离线单文件.html')).href);
   await page.waitForFunction(()=>window.__ready||window.__error,null,{timeout:180000});
   assert.equal(await page.evaluate(()=>window.__error),null);
-  await page.locator('#loading').waitFor({state:'hidden'});await page.evaluate(()=>__changlu.freeze());await frame('cover');await page.click('#skipIntro');
+  await page.locator('#loading').waitFor({state:'hidden'});await page.evaluate(()=>__changlu.freeze());await frame('cover');await page.evaluate(()=>__changlu.start());
   await page.click('#overviewBtn');await steps(.1);
   const mapHeights=await page.evaluate(()=>Object.values(__changlu.zones).map(z=>Math.round(z.group.position.y)));
   assert(new Set(mapHeights).size>=4,'Overview layout must undulate vertically');
   await frame('overview');await page.click('#ovBack');
   const flatHeights=await page.evaluate(()=>Object.values(__changlu.zones).map(z=>z.group.position.y));
   assert(flatHeights.every(y=>y===0),'Exiting overview must restore exact ground level');
-  await page.click('#homeBtn');await page.click('#openFolio');await steps(1.2);await frame('opening');await page.click('#skipIntro');
+  await page.click('#homeBtn');await page.click('#openFolio');await steps(1.2);await frame('opening');await page.evaluate(()=>__changlu.start());
   await page.click('#infoBtn');await page.selectOption('#travelSpeed','1.8');await page.check('#skipRead');await page.click('#infoClose');
   const people=await page.evaluate(()=>Object.values(__changlu.zones).map(z=>z.group.children.filter(o=>o.name.startsWith('Figure /')).map(o=>o.children.find(c=>c.isSprite).material.map.name)));
   const counts=people.map(p=>p.length);assert(counts.every(n=>n>0));assert.equal(new Set(people.flat()).size,people.flat().length);
@@ -43,7 +43,7 @@ try{
     }else if(idx===2)await page.keyboard.press('r');
     else await page.click('#ticketFront');
     assert.equal(await page.locator('#ticketLayer').getAttribute('data-side'),'back');
-    if(idx<4){await page.click('#keepLetter');await frame('back-'+idx);await page.click('#cardClose');}
+    if(idx<4){await frame('back-'+idx);await page.click('#cardClose');}
     else{await page.fill('#wishInput',visitorWish);await frame('back-4');await page.click('#launchBtn');await steps(26.5);}
   }
   assert.equal(await page.locator('#earthWish').innerText(),visitorWish);await frame('earth');await page.click('#closeEarth');await page.waitForFunction(()=>__changlu.state.mode==='codex');
@@ -53,7 +53,7 @@ try{
   await steps(.1);assert.equal(await page.evaluate(()=>__changlu.state.chapter),3);
   await page.setViewportSize({width:390,height:844});await steps(.1);await frame('phone-route');
   await page.click('#memoryBtn');assert.equal(await page.locator('.folio-artifact svg').count(),1);await frame('phone-book');
-  const storage=await page.evaluate(()=>JSON.parse(localStorage.getItem('shanhe.yisui.v1')));assert.equal(storage.wish,visitorWish);assert.equal(storage.quotes.length,4);assert.equal(storage.speed,1.8);assert.equal(storage.skipRead,true);
+  const storage=await page.evaluate(()=>JSON.parse(localStorage.getItem('shanhe.yisui.v1')));assert.equal(storage.wish,visitorWish);assert.equal(storage.speed,1.8);assert.equal(storage.skipRead,true);
   assert.deepEqual(errors,[]);fs.writeFileSync(path.join(out,'checks.json'),JSON.stringify({people:counts,actions:5,overviewUndulation:mapHeights,wish:storage.wish,kept:storage.quotes,errors},null,2));
   console.log('PASS five actions, undulating overview, archive jump, reading preferences, family letter, handwritten ending and portrait');
 }finally{await browser.close();}

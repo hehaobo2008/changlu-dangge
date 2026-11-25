@@ -500,7 +500,7 @@ def rocket():
         a = math.tau * i / 8 + 0.1
         add(B.box("FairLatch", (0.18, 0.34, 0.5), (2.66 * math.cos(a), 2.66 * math.sin(a), 45.3),
                   rot=(0, 0, a), color="#6b6961", material=M["metal"]))
-    # Conform the enamel badge and the access hatch to the taper of the fairing.
+    # Conform the access hatch to the taper of the fairing.
     from model_craft import Batch
     markings = Batch()
     def fair_surface(angle, height, offset):
@@ -509,16 +509,6 @@ def rocket():
                 r=r0+(r1-r0)*(height-z0)/(z1-z0)+offset
                 return (r*math.cos(angle),r*math.sin(angle),height)
         raise ValueError(height)
-    def emblem(radius, theta):
-        height=50.35+radius*math.sin(theta)
-        return fair_surface(-.88+radius*math.cos(theta)/2.32,height,.021)
-    for inside,outside,colour in [(0,.20,"#e4bd76"),(.20,.40,"#30585f"),
-            (.40,.56,"#30585f"),(.56,.64,"#d0aa65")]:
-        for j in range(32):
-            a,b=math.tau*j/32,math.tau*(j+1)/32
-            pts=[emblem(outside,a),emblem(outside,b),emblem(inside,b)]
-            if inside: pts.append(emblem(inside,a))
-            markings.panel(pts,colour)
     for j in range(10):
         a=-.15+j*.033
         for dz,h,color in [(0,.09,"#738381"),(.09,.94,"#b8beb4"),(1.03,.09,"#738381")]:
@@ -2099,20 +2089,53 @@ def build_port_terminal(end):
               color="#e9e3d4", material=M["white"], bevel=0.04))
     add(B.box("PortTermGlow", (16, 0.14, 0.1), (x, y - 4.9, z + 0.42),
               color="#bff7ff", material=M["cyan"]))
-    for k in (-1, 1):
-        for xx in (x - 5.0, x + 5.0):
-            pts = []
-            for i in range(11):
-                a = math.pi * i / 10
-                pts.append((xx + k * 0.0, y - 1.0 + 4.2 * math.cos(a), z + 3.2 + 2.5 * math.sin(a)))
-            add(B.tube("PortTermRib", pts, 0.10, "#f1ecdf", M["white"], segments=5))
-    add(sign_panel("PortTermSign", "platform", x, y - 5.4, z + 2.5, 0.0, 2.6, 1.05, glow=True))
-    add(sign_panel("PortExitSign", "exit", x - 7.4, y - 3.0, z + 1.9, 0.0, 2.0, 0.85, glow=True))
-    for i in range(10):
+    # Ground the elevated platform with structural piers reaching down to terrain.
+    for syy in (-1, 1):
+        px, py = x - 6.0, y - 1.0 + syy * 2.4
+        gz = ground_z(px, py)
+        ph = max(1.0, (z - 0.05) - gz)
+        add(B.cylinder("PortTermPier", 0.42, ph, (px, py, gz + ph / 2), segments=10,
+                       color="#dcd6c7", material=M["matte"]))
+    # Vaulted terminal canopy anchored onto the platform with grounded columns and fascia beams.
+    rib_x = [x - 5.2, x, x + 5.2]
+    for sxx in (-5.2, 5.2):
+        for syy in (-1, 1):
+            add(B.cylinder("PortTermCol", 0.16, 3.05,
+                           (x + sxx, y - 1.0 + syy * 3.55, z + 1.85), segments=8,
+                           color="#d8d1c0", material=M["metal"]))
+    for syy in (-1, 1):
+        add(B.box("PortTermBeam", (11.8, 0.18, 0.20),
+                  (x, y - 1.0 + syy * 3.55, z + 3.32),
+                  color="#ece6d8", material=M["white"]))
+    for xx in rib_x:
+        pts = [(xx, y - 1.0 + 3.55 * math.cos(math.pi * i / 12),
+                z + 3.30 + 1.55 * math.sin(math.pi * i / 12)) for i in range(13)]
+        add(B.tube("PortTermRib", pts, 0.11, "#f1ecdf", M["white"], segments=6))
+    canopy_x = [x - 5.9, x, x + 5.9]
+    verts, faces = [], []
+    ns = 13
+    for xx in canopy_x:
+        for i in range(ns):
+            a = math.pi * i / (ns - 1)
+            verts.append((xx, y - 1.0 + 3.60 * math.cos(a), z + 3.33 + 1.58 * math.sin(a)))
+    for k in range(len(canopy_x) - 1):
+        for i in range(ns - 1):
+            a = k * ns + i
+            faces.append((a, a + 1, a + ns + 1, a + ns))
+    add(B._finish("PortTermCanopy", verts, faces, "#f3eee1", M["white"], smooth=True))
+    # Mount signs cleanly onto platform stanchions so they never hover.
+    add(sign_panel("PortTermSign", "platform", x, y - 5.12, z + 1.75, 0.0, 2.6, 1.0, glow=True))
+    for sx in (-0.85, 0.85):
+        add(B.cylinder("PortTermSignPost", 0.045, 1.4, (x + sx, y - 5.05, z + 0.95), segments=6,
+                       color="#d8d1c0", material=M["metal"]))
+    add(sign_panel("PortExitSign", "exit", x - 7.4, y - 3.0, z + 1.65, 0.0, 2.0, 0.82, glow=True))
+    add(B.cylinder("PortExitSignPost", 0.05, 1.35, (x - 7.4, y - 2.95, z + 0.92), segments=6,
+                   color="#d8d1c0", material=M["metal"]))
+    for i in range(12):
         add(B.box("PortStair", (4.0, 0.75, 0.22), (x + 7.0, y - 4.2 + i * 0.75, z - 0.5 - i * 0.32),
                   color="#c9c1af", material=M["matte"]))
     for s in (-1, 1):
-        add(B.tube("PortStairRail", [(x + 7.0 + s * 1.8, y - 4.4 + i * 0.75, z + 0.4 - i * 0.32) for i in range(10)],
+        add(B.tube("PortStairRail", [(x + 7.0 + s * 1.8, y - 4.4 + i * 0.75, z + 0.4 - i * 0.32) for i in range(12)],
                    0.05, "#cfc8b7", M["metal"]))
 
 # ---------------------------------------------------------------- landscape
@@ -2342,20 +2365,32 @@ def build_greenery():
             z = ground_h(sx, sy)
             add(solar_panel(f"SolarFarm{row}_{col}", sx, sy, z, rot=0.0, tilt=0.40,
                             w=2.2, d=3.0, leg_h=1.0))
-    # solar pergolas on the waterfront
+    # solar pergolas on the waterfront: ground decks solidly into the bank and frame the tilted solar roof cleanly
     for i, (px, py) in enumerate([(44, -41.5), (76, -42)]):
         z = 2.06
-        add(B.box("PergolaDeck", (7.0, 4.4, 0.3), (px, py, z + 0.15),
+        deck_top = z + 0.30
+        gz = min(ground_h(px, py + 2.2), ground_h(px, py - 2.2)) - 0.25
+        deck_h = deck_top - gz
+        add(B.box("PergolaDeck", (7.0, 4.4, deck_h), (px, py, (deck_top + gz) / 2),
                   color="#b08a60", material=M["wood"]))
+        tilt = 0.32
+        z_front = z + 3.25 - 1.8 * math.sin(tilt) - 0.05
+        z_back = z + 3.25 + 1.8 * math.sin(tilt) - 0.05
         for sxx in (-1, 1):
             for syy in (-1, 1):
-                add(B.cylinder("PergolaPost", 0.09, 3.0,
-                               (px + sxx * 3.1, py + syy * 1.8, z + 1.65), segments=6,
+                z_top = z_front if syy < 0 else z_back
+                post_h = z_top - deck_top + 0.08
+                add(B.cylinder("PergolaPost", 0.095, post_h,
+                               (px + sxx * 3.1, py + syy * 1.8, deck_top + post_h / 2 - 0.04), segments=8,
                                color="#d8d1c0", material=M["metal"]))
+            add(B.beam("PergolaRafter", (px + sxx * 3.1, py - 1.8, z_front),
+                       (px + sxx * 3.1, py + 1.8, z_back), 0.12, 0.14, "#cec7b7", M["wood"]))
         for sxx in (-1, 1):
             add(B.box("PergolaPanel", (3.2, 4.0, 0.08), (px + sxx * 1.55, py, z + 3.25),
-                      rot=(0.32, 0, 0), color="#263f4a", material=M["panel"]))
-        add(B.box("PergolaBeam", (7.2, 0.14, 0.14), (px, py - 1.9, z + 3.0),
+                      rot=(tilt, 0, 0), color="#263f4a", material=M["panel"]))
+        add(B.box("PergolaBeam", (7.2, 0.14, 0.14), (px, py - 1.8, z_front),
+                  color="#cec7b7", material=M["wood"]))
+        add(B.box("PergolaBeam", (7.2, 0.14, 0.14), (px, py + 1.8, z_back),
                   color="#cec7b7", material=M["wood"]))
     # wind turbines on the ridge
     for i, (wx, wy, hh, ph) in enumerate([(-118, 133, 46, 0.2), (-52, 139, 42, 1.1),

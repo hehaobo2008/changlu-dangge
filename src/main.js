@@ -54,11 +54,11 @@ function savePreferences() {
 
 const SPACING = 420;
 const ZONES = [
-  { id: 'rural', label: '田埂晨', num: '01', year: '1983', center: 0, ovX: -24, ovY: -44, file: 'rural.glb', start: 0.045, end: 0.215 },
-  { id: 'town', label: '街市暮', num: '02', year: '1996', center: -420, ovX: 30, ovY: 50, file: 'town.glb', start: 0.25, end: 0.43 },
-  { id: 'city', label: '城夜雨', num: '03', year: '2008', center: -840, ovX: -28, ovY: -24, file: 'city.glb', start: 0.47, end: 0.65 },
-  { id: 'rail', label: '山河速', num: '04', year: '2023', center: -1260, ovX: 32, ovY: 68, file: 'rail.glb', start: 0.69, end: 0.86 },
-  { id: 'future', label: '星河远', num: '05', year: '2049', center: -1680, ovX: -18, ovY: 16, file: 'future.glb', start: 0.90, end: 1.0 },
+  { id: 'rural', label: '田埂晨', num: '01', year: '1983', center: 0, ovX: 0, ovY: -65, file: 'rural.glb', start: 0.045, end: 0.215 },
+  { id: 'town', label: '街市暮', num: '02', year: '1996', center: -420, ovX: 0, ovY: -20, file: 'town.glb', start: 0.25, end: 0.43 },
+  { id: 'city', label: '城夜雨', num: '03', year: '2008', center: -840, ovX: 0, ovY: 62, file: 'city.glb', start: 0.47, end: 0.65 },
+  { id: 'rail', label: '山河速', num: '04', year: '2023', center: -1260, ovX: 0, ovY: -33, file: 'rail.glb', start: 0.69, end: 0.86 },
+  { id: 'future', label: '星河远', num: '05', year: '2049', center: -1680, ovX: 0, ovY: 120, file: 'future.glb', start: 0.90, end: 1.0 },
 ];
 
 const PALETTES = [
@@ -86,7 +86,7 @@ const OVERVIEW_POSE = { pos: [900, 700, 600], look: [0, 0, -820], fov: 42 };
 const OVERVIEW_POSE_PORTRAIT = { pos: [-341, 3192, -57], look: [0, 20, -900], fov: 48 };
 function overviewPose() { return innerWidth / innerHeight < .85 ? OVERVIEW_POSE_PORTRAIT : OVERVIEW_POSE; }
 // ---------------------------------------------------------------- UI helpers
-const el=Object.fromEntries(['loading','loadFill','loadPct','landing','startBtn','hud','chapter','chNum','chYear','chTitle','chLine','chSetting','mailFrom','mailAction','letterPages','prevLetter','nextLetter','launchSignal','cardTitle','cardBody','cardIndex','keepLetter','cardClose','tlFill','timeline','scrollHint','overviewBtn','soundBtn','soundTxt','infoBtn','info','infoClose','overview','ovLabels','ovBack','ink','wishInput','launchBtn','endCard','toast','world','autoBtn','autoTxt','homeBtn','travelMeta','journeyPct','collectedTxt','memoryBtn','landingSoundBtn','replyQuote'].map(id=>[id,$('#'+id)]));
+const el=Object.fromEntries(['loading','loadFill','loadPct','landing','startBtn','hud','chapter','chYear','chTitle','chLine','chSetting','mailFrom','mailAction','launchSignal','cardTitle','cardBody','cardClose','tlFill','timeline','scrollHint','overviewBtn','soundBtn','soundTxt','infoBtn','info','infoClose','overview','ovLabels','ovBack','ink','wishInput','launchBtn','endCard','toast','world','autoBtn','autoTxt','homeBtn','travelMeta','journeyPct','memoryBtn','landingSoundBtn','replyQuote'].map(id=>[id,$('#'+id)]));
 el.card=$('#ticketLayer');
 const boardingReturn=$('#boardingReturn');
 
@@ -235,10 +235,10 @@ for (const z of ZONES) {
   islandShadowByZone[z.id] = p;
 }
 islandShadows.visible = false;
-const ribbonCurve = new THREE.CatmullRomCurve3(ZONES.map(z => new THREE.Vector3(z.ovX, z.ovY - 12, z.center)));
+const ribbonCurve = new THREE.CatmullRomCurve3(ZONES.map(z => new THREE.Vector3(z.ovX, z.ovY - 14, z.center)));
 const overviewRibbon = new THREE.Mesh(
-  new THREE.TubeGeometry(ribbonCurve, 96, 2.2, 8, false),
-  new THREE.MeshBasicMaterial({ color: '#78b0e2', transparent: true, opacity: .38, depthWrite: false })
+  new THREE.TubeGeometry(ribbonCurve, 96, 1.5, 8, false),
+  new THREE.MeshBasicMaterial({ color: '#c48636', transparent: true, opacity: .62, depthWrite: false })
 );
 overviewRibbon.visible = false;
 overviewRibbon.userData.noNormal = true;
@@ -323,6 +323,10 @@ async function loadWorld() {
         }
         if(mat.name.startsWith('Port nursery glazing')){
           mat.depthWrite=false;mat.forceSinglePass=true;o.userData.noNormal=true;o.castShadow=false;
+        }
+        if(mat.name.startsWith('CBD_Glass_')){
+          mat.depthWrite=false;mat.forceSinglePass=true;o.castShadow=false;
+          mat.envMapIntensity=1.25;
         }
         if(!mat.userData.stageCoating){
           if (z.id==='town' && ['Matte','Stone','Rough'].includes(mat.name)) finishMasonry(mat,mat.name==='Matte');
@@ -821,8 +825,7 @@ function setChapterUI(idx, visible) {
   if (state.uiChapter !== idx) {
     state.uiChapter = idx;
     const chapter = ZONES[idx], letter = letters[idx];
-    el.chNum.textContent = chapter.num;
-    el.chYear.textContent = `${chapter.year} · ${letter.distance}`;
+    el.chYear.textContent = String(chapter.year);
     el.chTitle.textContent = chapter.label;
     el.chLine.textContent = letter.routeLine;
     el.chSetting.textContent = letter.setting;
@@ -867,11 +870,9 @@ function startExperience(quick=false){
   if(state.mode==='prologue'){
     $('#bookActIntro').textContent=letters[0].setting;
     book=openBook(intro,reducedMotion,refreshFirstPage,()=>{audio.init();if(audio.chapter!==0)audio.setChapter(0);audio.pageTurn();});
-    $('#skipIntro').textContent=reducedMotion?'进入长卷 →':'跳过引入 →';
     updateCamera(2);playPrologue(0);intro.focus({preventScroll:true});
   }
 }
-$('#skipIntro').addEventListener('click',()=>{audio.init();finishPrologue();});
 function approachIsland(idx) {
   resetNarrative();state.presented.delete(idx);
   if(!state.ready)return;
@@ -923,7 +924,7 @@ function enterOverview() {
   applyOverviewLayout(true,state.time);
   frameOverview();updateSkyLights(1);updateZoneVisibility();updateAmbient(0);
   el.toast.classList.remove('show');
-  el.ovBack.textContent = state.overviewOrigin === 'landing' ? '返回封面 →' : state.overviewOrigin === 'ended' ? '返回尾声 →' : '回到路上 →';
+  el.ovBack.textContent = state.overviewOrigin === 'landing' ? '返回封面' : state.overviewOrigin === 'ended' ? '返回尾声' : '回到路上';
   el.ovBack.focus({ preventScroll: true });
 }
 function exitOverview(toTravel = false) {
@@ -958,7 +959,7 @@ function positionOverviewLabels() {
   state.ovLabels.forEach((button,i)=>{
     const z=ZONES[i],pos=zones[z.id]?.group?.position;
     const ox=pos?pos.x:(z.ovX||0),oy=pos?pos.y:(z.ovY||0);
-    const anchor=new THREE.Vector3(ox,oy+(w<=h?14:76),z.center).project(camera);
+    const anchor=new THREE.Vector3(ox,oy+(w<=h?14:98),z.center).project(camera);
     const x=(anchor.x+1)*w/2,y=(1-anchor.y)*h/2;
     if(w<=h){
       const left=Math.max(14,w*.09);
@@ -1000,11 +1001,6 @@ function showLetter(idx,{reading=false,archive=false,stop=false}={}) {
   if(idx===4) prepareReply();
   document.querySelector('#archiveYears').hidden=!archive;$('#returnScene').hidden=!archive;
   $$('#archiveYears button').forEach((b,i)=>{b.disabled=i>state.delivered&&!state.collected.has(i);b.setAttribute('aria-current',String(i===idx));});
-  updateLetterPages();updateKeepButton(idx);
-}
-function updateLetterPages(){
-  el.letterPages.hidden=state.delivered===0&&state.collected.size<2;
-  el.prevLetter.disabled=state.reading===0;el.nextLetter.disabled=state.reading>=4||state.reading>=state.delivered&&!state.collected.has(state.reading+1);
 }
 function offeredLetter(){return Math.min(routeIndex(state.progress),state.delivered);}
 function updateBoardingReturn(){
@@ -1018,7 +1014,7 @@ function updateMail(){
   if(p>=.270)through=1;if(p>=.504)through=2;
   if(p>=.715)through=3;
   if(p>=.930)through=4;
-  if(through>state.delivered){state.delivered=through;if(state.modal===el.card)updateLetterPages();}
+  if(through>state.delivered)state.delivered=through;
   const idx=offeredLetter();
   el.mailFrom.textContent=letters[idx].title;
   el.mailAction.textContent='翻开书页';
@@ -1071,10 +1067,9 @@ function shelveArrival(){
   cancelArrival();
 }
 function presentAlongRoute(){
-  const stop=state.storyStop,notice=$('#stopNotice');
-  notice.classList.toggle('show',stop?.phase==='approach'&&!state.modal);
+  const stop=state.storyStop;
   if(stop?.phase==='approach'&&stop.curve.duration-stop.curve.elapsed<=1.5&&state.mode==='travel'&&!state.modal){
-    notice.classList.remove('show');beginArrival(stop.idx,{coasting:stop.curve.elapsed<stop.curve.duration});
+    beginArrival(stop.idx,{coasting:stop.curve.elapsed<stop.curve.duration});
   }
 }
 function continueFromTicket(distance=2.28){
@@ -1109,12 +1104,7 @@ function openCard(which,reading=true){
   (reading?$('#cardTitle'):$('#ticketFront')).focus({preventScroll:true});
 }
 function updateCollection(){
-  el.collectedTxt.textContent='旧物 '+state.collected.size+' / 5';
   $$('#timeline button[data-ch]').forEach((b,i)=>b.classList.toggle('collected',state.collected.has(i)));
-}
-function updateKeepButton(idx){
-  const kept=state.kept.has(idx);
-  el.keepLetter.setAttribute('aria-pressed',String(kept));el.keepLetter.textContent=kept?'已留住 · 取出':'留住这句话';
 }
 function resetLetters(){
   cancelArrival();state.storyStop=null;state.braking=null;state.routeVelocity=state.glideSpeed=state.metreSpeed=0;
@@ -1362,21 +1352,6 @@ $('#ticketScrim').addEventListener('pointerup',e=>{
 });
 $('#ticketScrim').addEventListener('pointercancel',()=>scrimTouch=null);
 $('#ticketScrim').addEventListener('click',()=>{if(!scrimSwiped&&state.modal===el.card)closePanels();});
-function turnLetter(by) {
-  const accessible=letters.map((_,i)=>i).filter(i=>i<=state.delivered||state.collected.has(i));
-  const idx=accessible[clamp(accessible.indexOf(state.reading)+by,0,accessible.length-1)];
-  showLetter(idx,{reading:tickets.back,archive:true});if(tickets.back)markTicketRead(idx);
-  if (by > 0 && el.nextLetter.disabled) el.prevLetter.focus({preventScroll:true});
-  if (by < 0 && el.prevLetter.disabled) el.nextLetter.focus({preventScroll:true});
-}
-el.prevLetter.addEventListener('click', () => turnLetter(-1));
-el.nextLetter.addEventListener('click', () => turnLetter(1));
-el.keepLetter.addEventListener('click', () => {
-  const idx = state.reading;
-  if(state.kept.has(idx))state.kept.delete(idx);else state.kept.add(idx);
-  state.keptLetter=[...state.kept].at(-1)??null;savePreferences();
-  updateKeepButton(idx);
-});
 el.memoryBtn.addEventListener('click',openCodex);
 // Handle a completed touch directly. Chromium can suppress the compatibility
 // click on the first control tapped after a canvas or ticket swipe.

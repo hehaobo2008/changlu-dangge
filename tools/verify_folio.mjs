@@ -70,11 +70,12 @@ try{
   await phase('spread');await shot('spread');await mode('travel');await page.waitForTimeout(500);await shot('entry-0');
   if(!phone){await page.mouse.wheel(0,130);await page.waitForFunction(()=>__changlu.state.progress>.1001);}
   if(phone){assert.equal(await page.locator('#hud .hud-actions>button:visible').count(),4);await click('#moreBtn');await shot('more');await click('[data-tool=infoBtn]');await click('#infoClose');}
-  assert.equal(await page.locator('#detailBtn,#detailPanel,#encounter,#actionProp,#ticketFlipHint,#skipFinale,#folioEnter').count(),0);
+  assert.equal(await page.locator('#detailBtn,#detailPanel,#encounter,#actionProp,#ticketFlipHint,#skipFinale,#folioEnter,#ticketReverseBrand,#cardIndex,#keepLetter,#letterPages,#prevLetter,#nextLetter,#collectedTxt,#chNum,#skipLoad,#skipIntro,#stopNotice').count(),0);
   await page.evaluate(()=>{__changlu.freeze();__changlu.automaticLetters(false);});
   for(let i=0;i<5;i++){
     if(i){await click('#timeline [data-ch="'+i+'"]');await step(2.4);}
     await place(entry[i]);await page.waitForTimeout(840);await checkIntro('center');await shot('entry-'+i);
+    assert.match((await page.locator('#chYear').innerText()).trim(),/^\d{4}$/);
     if(!phone){
       const png=await page.evaluate(()=>{__changlu.render();return document.querySelector('#gl').toDataURL('image/webp',.9).split(',')[1];});
       fs.writeFileSync(path.join(out,'frame-'+names[i]+'.webp'),Buffer.from(png,'base64'));
@@ -136,15 +137,21 @@ try{
       assert.equal(await page.locator('#ticketFront svg text').evaluateAll(ts=>ts.filter(t=>t.textContent.replace(/\s/g,'')==='副券').length),1);
     }else if(i===4){
       assert.equal(await page.locator('#ticketFront [data-grip]').count(),0);
+      assert.equal((await page.locator('#launchBtn').innerText()).trim(),'点亮归途');
+      const bpText=await page.locator('#ticketFront').innerText();
+      assert(!bpText.includes('稻种培育任务')&&!bpText.includes('三天航程'),'Unexpected suffix on boarding pass: '+bpText);
     }
     if(!phone)await page.keyboard.press('r');else await click('#ticketFront');
     assert.equal(await page.locator('#ticketLayer').getAttribute('data-side'),'back');await page.waitForTimeout(500);await shot('letter-'+i);
-    if(i<4){await click('#cardClose');await page.evaluate(()=>__changlu.automaticLetters(false));}
+    if(i<4){
+      if(i===0)assert.equal((await page.locator('#cardClose').innerText()).trim(),'继续游览');
+      await click('#cardClose');await page.evaluate(()=>__changlu.automaticLetters(false));
+    }
     else{await page.locator('#wishInput').fill('愿稻穗在月面抽绿');await click('#launchBtn');await step(26);}
   }
   const fades=await page.evaluate(()=>introFades.filter(f=>f.mode==='travel'&&f.from===0&&f.to===1).map(f=>f.title));
   assert.deepEqual([...new Set(fades)],acts.map(act=>act.title));
-  await mode('ended');await page.waitForTimeout(1200);await shot('earth');await click('#closeEarth');await page.waitForTimeout(1250);await shot('rewind');await mode('codex');
+  await mode('ended');await page.waitForTimeout(1200);await shot('earth');await click('#closeEarth');await page.waitForTimeout(1800);await shot('rewind');await mode('codex');
   assert.equal(await page.locator('#codex').getAttribute('data-page'),'0');await click('#bookmarks button:last-child');await page.waitForTimeout(550);await shot('final');assert((await page.locator('#folioContent').innerText()).includes('愿稻穗在月面抽绿'));
   await page.keyboard.press('ArrowLeft');await click('#folioImage');await mode('travel');await step(.05);
   assert.equal(await page.evaluate(()=>__changlu.state.chapter),4);assert.deepEqual(errors,[]);

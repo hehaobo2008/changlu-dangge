@@ -43,8 +43,7 @@ async function completeLaunch(p,tap=false){await p.locator('#launchBtn')[tap?'ta
 async function place(p,progress){await p.evaluate(t=>{__changlu.setProgress(t);__changlu.settle(24);__changlu.step(0)},progress)}
 async function shot(p,name){await p.evaluate(()=>__changlu.render());await p.waitForTimeout(750);await p.screenshot({path:path.join(out,name+'.png')})}
 async function start(p){
-  const touch=await p.evaluate(()=>matchMedia('(pointer:coarse)').matches);
-  await p.locator('#skipIntro')[touch?'tap':'click']();
+  await p.evaluate(()=>__changlu.start());
   await step(p,.01);await mode(p,'travel');
 }
 async function close(p){await p.context().close()}
@@ -62,7 +61,7 @@ async function lastSpread(p){
 async function replay(p){
   await lastSpread(p);await p.getByRole('button',{name:'再走一程',exact:true}).click();await mode(p,'prologue');
   check(await p.evaluate(()=>__changlu.state.replyDraft===(JSON.parse(localStorage.getItem('shanhe.yisui.v1'))?.wish||'')&&!__changlu.camera.view?.enabled),'Replay restores saved writing and framing');
-  await p.locator('#skipIntro').click();await step(p,.01);
+  await p.evaluate(()=>__changlu.start());await step(p,.01);
 }
 async function ending(p,message){
   check(await p.locator('#earthTitle').innerText()===familyNote&&await p.locator('#earthLine').innerText()===endingText,'Earth shows both final lines');
@@ -175,9 +174,8 @@ async function arrivals(p){
     await shot(p,'stop-back-'+i);await step(p,.5);
     check(await p.evaluate(()=>__changlu.state.progress)===trip.p,'Ticket '+i+' stays readable until a fresh action');
     if(i===0){
-      await p.keyboard.press('Shift+Tab');check(await p.locator('#cardClose').evaluate(n=>n===document.activeElement),'Focus wraps backwards to the single continue action');
-      await p.keyboard.press('Tab');check(await p.locator('#keepLetter').evaluate(n=>n===document.activeElement),'Focus wraps forwards');
-      await p.locator('#keepLetter').click();
+      await p.keyboard.press('Shift+Tab');check(await p.locator('#cardClose').evaluate(n=>n===document.activeElement),'Focus stays trapped on continue action backwards');
+      await p.keyboard.press('Tab');check(await p.locator('#cardClose').evaluate(n=>n===document.activeElement),'Focus stays trapped on continue action forwards');
     }
     if(i<4){
       await p.mouse.move(100,450);await p.waitForTimeout(200);await p.mouse.wheel(0,240);await p.waitForTimeout(50);await step(p,1);
@@ -195,11 +193,10 @@ async function arrivals(p){
       await p.mouse.move(40,350);await p.mouse.wheel(0,240);await step(p,.4);
       check(await p.evaluate(()=>__changlu.state.modal?.id==='ticketLayer'),'Forward navigation keeps the boarding pass open at the terminus');
       check(await p.locator('#shelveTicket').isHidden(),'Boarding pass hides intermediate shelve button');
-      await p.locator('#prevLetter').click();await p.locator('#nextLetter').click();
-      check(await p.locator('#wishInput').inputValue()==='等星河归来，再聚一桌。','Draft survives archive navigation');
+      check(await p.locator('#wishInput').inputValue()==='等星河归来，再聚一桌。','Wish draft stays intact');
       check(await p.evaluate(()=>__changlu.state.collected.size)===5,'All five tickets read');
       await completeLaunch(p,false);await mode(p,'ended');await ending(p,'等星河归来，再聚一桌。');
-      await lastSpread(p);check((await p.locator('.home-line').first().innerText()).includes('已留住'),'Kept quote remains marked');await p.locator('#closeCodex').click();
+      await lastSpread(p);check(await p.locator('.home-line').count()===5,'All five summary lines appear in codex ending');await p.locator('#closeCodex').click();
     }
   }
   await replay(p);await p.locator('#autoBtn').click();await step(p,30);
@@ -389,8 +386,10 @@ async function mobile(p,name,{touch=false,flight=false}={}){
 async function deployment(){
   const p=await open({viewport:{width:1280,height:800},reducedMotion:'reduce'},base+'/nested/');
   await step(p,20);await mode(p,'prologue');
-  check(await p.locator('#skipIntro').innerText()==='进入长卷 →','Reduced motion offers a static readable introduction');
-  await p.locator('#skipIntro').click();await place(p,1);await step(p,.6);
+  check(await p.locator('#skipIntro,#skipLoad,#stopNotice').count()===0,'Skip controls and stop notice are removed');
+  await p.locator('#openFolio').click();await step(p,.2);
+  check(await p.locator('#prologue').getAttribute('data-phase')==='background','Reduced motion waits at opening spread');
+  await p.locator('#openFolio').click();await step(p,2.6);await mode(p,'travel');await place(p,1);await step(p,.6);
   await p.locator('#ticketFront').click();await p.locator('#wishInput').fill('归来仍有一盏灯');await p.locator('#launchBtn').click();
   await mode(p,'ended');await ending(p,'归来仍有一盏灯');
   check(await p.evaluate(()=>__changlu.zones.future.rocket.position.y)===7,'Reduced motion omits moving launch');
